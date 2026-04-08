@@ -1,54 +1,413 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<title>REDACTOR</title>
-<link rel="stylesheet" href="styles.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PsychNote Expert</title>
+  <link rel="stylesheet" href="style.css" />
 </head>
-
-<body>
-
-<div class="app">
-
-  <aside id="sidebar" class="sidebar">
-
-    <h1>REDACTOR</h1>
-
-    <div class="block">
-      <label>Type</label>
-      <div id="typeChoices"></div>
+<body class="font-inter">
+  <header class="topbar no-print">
+    <div class="top-left">
+      <button class="icon-btn" id="sidebarToggleBtn" type="button">☰</button>
+      <div class="brand">
+        <div class="brand-title">PsychNote</div>
+        <div class="brand-subtitle">Rédaction clinique psychiatrique</div>
+      </div>
     </div>
 
-    <div class="block">
-      <label>Symptômes</label>
-      <div id="symptomChoices"></div>
+    <div class="top-center">
+      <button class="ghost-btn" data-menu-target="menuMode" type="button">
+        <span>Mode</span>
+        <strong id="modeDisplay">Complet</strong>
+      </button>
+      <button class="ghost-btn" data-menu-target="menuType" type="button">
+        <span>Type</span>
+        <strong id="typeDisplay">Consultation</strong>
+      </button>
+      <button class="ghost-btn" data-menu-target="menuSubType" type="button">
+        <span>Sous-type</span>
+        <strong id="subTypeDisplay">Suivi</strong>
+      </button>
+      <button class="ghost-btn" data-menu-target="menuOutput" type="button">
+        <span>Sortie</span>
+        <strong id="outputDisplay">Texte</strong>
+      </button>
+      <button class="ghost-btn" data-menu-target="menuFont" type="button">
+        <span>Police</span>
+        <strong id="fontDisplay">Inter</strong>
+      </button>
     </div>
 
-    <div class="block">
-      <label>Plan</label>
-      <div id="planChoices"></div>
+    <div class="top-right">
+      <button class="secondary-btn" id="btnText" type="button">Texte</button>
+      <button class="secondary-btn" id="btnQuestionnaire" type="button">Questionnaire</button>
+      <button class="secondary-btn" id="btnTodo" type="button">To do</button>
+      <button class="secondary-btn" id="btnCopy" type="button">Copier</button>
+      <button class="secondary-btn" id="btnPrint" type="button">Print</button>
+    </div>
+  </header>
+
+  <aside id="sidebar" class="sidebar no-print">
+    <div class="tabs">
+      <button class="tab active" data-tab="clinique" type="button">Clinique</button>
+      <button class="tab" data-tab="traitements" type="button">Traitements</button>
+      <button class="tab" data-tab="modules" type="button">Modules</button>
+      <button class="tab" data-tab="todo" type="button">To do</button>
     </div>
 
-    <div class="block">
-      <label>Modules</label>
-      <button onclick="openAlcohol()">alcool</button>
+    <div class="sidebar-scroll">
+      <!-- TAB CLINIQUE -->
+      <section class="tab-panel active" id="tab-clinique">
+        <div class="section-block">
+          <div class="section-title">Identité</div>
+          <div class="field-row">
+            <label class="field-label" for="patientName">Nom / initiales</label>
+            <input id="patientName" class="text-input" type="text" placeholder="Madame X, A.B." />
+          </div>
+          <div class="field-grid two">
+            <div>
+              <label class="field-label" for="patientAge">Âge</label>
+              <input id="patientAge" class="text-input" type="number" min="0" max="120" placeholder="34" />
+            </div>
+            <div>
+              <label class="field-label" for="docDate">Date</label>
+              <input id="docDate" class="text-input" type="date" />
+            </div>
+          </div>
+          <div class="field-label">Genre</div>
+          <div id="genderChoices" class="pill-wrap"></div>
+          <div class="field-label">Civilité</div>
+          <div id="civilityChoices" class="pill-wrap"></div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Motif</div>
+          <div id="reasonChoices" class="pill-wrap"></div>
+          <div class="field-row mt">
+            <label class="field-label" for="reasonFree">Motif libre</label>
+            <input id="reasonFree" class="text-input" type="text" placeholder="Ex. trouble anxio-dépressif après burn-out" />
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Symptômes fréquents</div>
+          <div id="symptomChoices" class="pill-wrap"></div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Examen mental — rapide</div>
+          <div class="field-label">Contact</div>
+          <div id="mseContactChoices" class="pill-wrap"></div>
+          <div class="field-label">Humeur</div>
+          <div id="mseMoodChoices" class="pill-wrap"></div>
+          <div class="field-label">Anxiété</div>
+          <div id="mseAnxietyChoices" class="pill-wrap"></div>
+          <div class="field-label">Pensée</div>
+          <div id="mseThoughtChoices" class="pill-wrap"></div>
+          <div class="field-label">Comportement</div>
+          <div id="mseBehaviorChoices" class="pill-wrap"></div>
+          <div class="field-label">Sommeil</div>
+          <div id="mseSleepChoices" class="pill-wrap"></div>
+          <div class="field-label">Alimentation</div>
+          <div id="mseFoodChoices" class="pill-wrap"></div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Examen mental — détaillé</div>
+          <div class="field-row">
+            <label class="field-label" for="mseOrientation">Orientation</label>
+            <input id="mseOrientation" class="text-input" type="text" placeholder="Bien orienté dans le temps et l’espace" />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="msePresentation">Présentation</label>
+            <input id="msePresentation" class="text-input" type="text" placeholder="Soignée, adaptée, négligée..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="mseCollaboration">Collaboration</label>
+            <input id="mseCollaboration" class="text-input" type="text" placeholder="Bonne, partielle..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="msePsychomotor">Psychomotricité</label>
+            <input id="msePsychomotor" class="text-input" type="text" placeholder="Sans ralentissement, agitation..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="mseSpeech">Discours</label>
+            <input id="mseSpeech" class="text-input" type="text" placeholder="Cohérent, structuré..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="mseReality">Rapport à la réalité / délire</label>
+            <input id="mseReality" class="text-input" type="text" placeholder="Pas d’élément délirant..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="msePerception">Perception</label>
+            <input id="msePerception" class="text-input" type="text" placeholder="Pas de trouble perceptif..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="mseNegative">Anhédonie / aboulie / ralentissement</label>
+            <input id="mseNegative" class="text-input" type="text" placeholder="Anhédonie, aboulie..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="mseTrauma">Éléments traumatiques</label>
+            <input id="mseTrauma" class="text-input" type="text" placeholder="Hypervigilance, reviviscences..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="mseInsight">Insight / jugement</label>
+            <input id="mseInsight" class="text-input" type="text" placeholder="Préservé, partiel..." />
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Risque suicidaire</div>
+          <div class="field-label">Idées</div>
+          <div id="riskIdeasChoices" class="pill-wrap"></div>
+          <div class="field-label">Gravité</div>
+          <div id="riskSeverityChoices" class="pill-wrap"></div>
+          <div class="field-label">Facteurs de protection</div>
+          <div id="riskProtectionChoices" class="pill-wrap"></div>
+          <div class="field-row">
+            <label class="field-label" for="riskScenario">Scénario</label>
+            <input id="riskScenario" class="text-input" type="text" placeholder="Absent, flou, précis..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="riskAttempts">ATCD passage à l’acte</label>
+            <input id="riskAttempts" class="text-input" type="text" placeholder="Ex. TS en 2023" />
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Psychosocial</div>
+          <div class="field-label">Logement</div>
+          <div id="psyHousingChoices" class="pill-wrap"></div>
+          <div class="field-label">Travail / activité</div>
+          <div id="psyWorkChoices" class="pill-wrap"></div>
+          <div class="field-label">Réseau</div>
+          <div id="psyNetworkChoices" class="pill-wrap"></div>
+          <div class="field-label">Stress</div>
+          <div id="psyStressChoices" class="pill-wrap"></div>
+          <div class="field-row">
+            <label class="field-label" for="psFamily">Famille</label>
+            <input id="psFamily" class="text-input" type="text" placeholder="Soutien, conflits..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="psFree">Psychosocial libre</label>
+            <textarea id="psFree" class="text-area" placeholder="Description libre du contexte de vie"></textarea>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Contexte / histoire</div>
+          <textarea id="contextFree" class="text-area lg" placeholder="Contexte clinique, histoire récente, facteurs déclenchants..."></textarea>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Plan libre</div>
+          <div id="planChoices" class="pill-wrap"></div>
+          <textarea id="planFree" class="text-area" placeholder="Plan, recommandations, prise en charge..."></textarea>
+        </div>
+      </section>
+
+      <!-- TAB TRAITEMENTS -->
+      <section class="tab-panel" id="tab-traitements">
+        <div class="section-block">
+          <div class="section-title">Traitements présents dans le texte</div>
+          <textarea id="treatment" class="text-area lg" placeholder="Une ligne par traitement"></textarea>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Suggestions rapides</div>
+
+          <div class="subsection-title">ISRS</div>
+          <div class="pill-wrap mini">
+            <button class="pill add-pill" type="button" data-treatment="Sertraline 50 mg">Sertraline 50 mg</button>
+            <button class="pill add-pill" type="button" data-treatment="Escitalopram 10 mg">Escitalopram 10 mg</button>
+            <button class="pill add-pill" type="button" data-treatment="Fluoxétine 20 mg">Fluoxétine 20 mg</button>
+          </div>
+
+          <div class="subsection-title">IRSNa</div>
+          <div class="pill-wrap mini">
+            <button class="pill add-pill" type="button" data-treatment="Venlafaxine 75 mg">Venlafaxine 75 mg</button>
+            <button class="pill add-pill" type="button" data-treatment="Duloxétine 30 mg">Duloxétine 30 mg</button>
+          </div>
+
+          <div class="subsection-title">Antipsychotiques</div>
+          <div class="pill-wrap mini">
+            <button class="pill add-pill" type="button" data-treatment="Aripiprazole 5 mg">Aripiprazole 5 mg</button>
+            <button class="pill add-pill" type="button" data-treatment="Quétiapine 25 mg">Quétiapine 25 mg</button>
+            <button class="pill add-pill" type="button" data-treatment="Olanzapine 5 mg">Olanzapine 5 mg</button>
+          </div>
+
+          <div class="subsection-title">Hypnotiques / anxiolytiques</div>
+          <div class="pill-wrap mini">
+            <button class="pill add-pill" type="button" data-treatment="Trazodone 100 mg au coucher">Trazodone 100 mg</button>
+            <button class="pill add-pill" type="button" data-treatment="Diazépam selon schéma dégressif">Diazépam</button>
+            <button class="pill add-pill" type="button" data-treatment="Lorazépam 1 mg si besoin">Lorazépam</button>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Suggestion médicamenteuse automatique</div>
+          <div class="hint">
+            Le moteur propose automatiquement une orientation thérapeutique prudente dans le texte final.
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB MODULES -->
+      <section class="tab-panel" id="tab-modules">
+        <div class="section-block">
+          <div class="section-title">Consommation alcool</div>
+          <div class="field-label">Types</div>
+          <div id="alcTypeChoices" class="pill-wrap"></div>
+          <div class="field-label">Pattern</div>
+          <div id="alcPatternChoices" class="pill-wrap"></div>
+          <div class="field-label">Fonctions</div>
+          <div id="alcFunctionChoices" class="pill-wrap"></div>
+          <div class="field-label">Dépendance / gravité</div>
+          <div id="alcDependenceChoices" class="pill-wrap"></div>
+          <div class="field-label">Sevrage / antécédents</div>
+          <div id="alcWithdrawalChoices" class="pill-wrap"></div>
+
+          <div class="field-row">
+            <label class="field-label" for="alcQty">Quantité</label>
+            <input id="alcQty" class="text-input" type="text" placeholder="Ex. 8 unités/jour" />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="alcLast">Dernière prise</label>
+            <input id="alcLast" class="text-input" type="text" placeholder="Ex. hier soir" />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="alcStart">Début</label>
+            <input id="alcStart" class="text-input" type="text" placeholder="Depuis l’adolescence..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="alcCharacter">Caractère</label>
+            <input id="alcCharacter" class="text-input" type="text" placeholder="Social, solitaire, mixte..." />
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="alcFree">Détails libres</label>
+            <textarea id="alcFree" class="text-area" placeholder="Tolérance, périodes d’abstinence, consommation matinale..."></textarea>
+          </div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Autres substances</div>
+          <div class="field-label">Substances</div>
+          <div id="otherSubstanceChoices" class="pill-wrap"></div>
+          <div class="field-label">Fonctions</div>
+          <div id="otherSubstanceFunctionChoices" class="pill-wrap"></div>
+          <textarea id="otherSubstances" class="text-area" placeholder="Détails libres"></textarea>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Sevrage automatique</div>
+          <div class="field-grid two">
+            <div>
+              <label class="field-label" for="withdrawDrug">Molécule</label>
+              <select id="withdrawDrug" class="text-input">
+                <option value="Valium">Valium</option>
+                <option value="Temesta">Temesta</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label" for="withdrawPattern">Rythme</label>
+              <select id="withdrawPattern" class="text-input">
+                <option value="standard">Standard</option>
+                <option value="rapide">Rapide</option>
+                <option value="lent">Lent</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-grid two">
+            <div>
+              <label class="field-label" for="withdrawDose">Dose de départ (mg)</label>
+              <input id="withdrawDose" class="text-input" type="number" min="1" placeholder="40" />
+            </div>
+            <div>
+              <label class="field-label" for="withdrawDays">Nombre de jours</label>
+              <input id="withdrawDays" class="text-input" type="number" min="2" placeholder="10" />
+            </div>
+          </div>
+          <div class="field-row">
+            <label class="field-label" for="withdrawStartDate">Date de départ</label>
+            <input id="withdrawStartDate" class="text-input" type="date" />
+          </div>
+          <button class="primary-btn wide" id="btnBuildWithdrawal" type="button">Construire le schéma</button>
+          <textarea id="withdrawOutput" class="text-area lg" placeholder="Le schéma apparaîtra ici"></textarea>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Presets rapides</div>
+          <div id="presetWrap" class="pill-wrap mini"></div>
+        </div>
+      </section>
+
+      <!-- TAB TODO -->
+      <section class="tab-panel" id="tab-todo">
+        <div class="section-block">
+          <div class="section-title">Set intelligent</div>
+          <select id="todoSetSelect" class="text-input"></select>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Demi-journées</div>
+          <div id="todoTimeChoices" class="pill-wrap"></div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Types de tâches</div>
+          <div id="todoTypeChoices" class="pill-wrap"></div>
+        </div>
+
+        <div class="section-block">
+          <div class="section-title">Priorité</div>
+          <div id="todoPriorityChoices" class="pill-wrap"></div>
+          <div class="field-row">
+            <label class="field-label" for="todoEstimate">Durée estimée</label>
+            <input id="todoEstimate" class="text-input" type="text" placeholder="Ex. 20 min, 1 h" />
+          </div>
+          <textarea id="todoNotes" class="text-area lg" placeholder="Tâches libres"></textarea>
+        </div>
+      </section>
     </div>
 
+    <div class="sidebar-footer">
+      <button class="secondary-btn" id="btnSave" type="button">Sauver</button>
+      <button class="secondary-btn" id="btnLoad" type="button">Recharger</button>
+      <button class="secondary-btn" id="btnReset" type="button">Réinitialiser</button>
+      <button class="secondary-btn" id="btnDemo" type="button">Démo</button>
+      <div id="warnings" class="warnings">Aucune alerte.</div>
+    </div>
   </aside>
 
   <main class="main">
+    <section class="editor-shell">
+      <div class="editor-meta no-print">
+        <div class="metric">
+          <span class="metric-label">Type</span>
+          <strong id="metricType">Consultation</strong>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Mode</span>
+          <strong id="metricMode">Complet</strong>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Sortie</span>
+          <strong id="metricOutput">Texte</strong>
+        </div>
+      </div>
 
-    <div class="topbar">
-      <button onclick="toggleSidebar()">☰</button>
-    </div>
-
-    <textarea id="output"></textarea>
-
+      <textarea id="output" class="output" spellcheck="false" placeholder="Le texte généré apparaîtra ici et se mettra à jour en direct."></textarea>
+    </section>
   </main>
 
-</div>
+  <!-- MENUS -->
+  <div id="menuMode" class="menu-dropdown hidden"></div>
+  <div id="menuType" class="menu-dropdown hidden"></div>
+  <div id="menuSubType" class="menu-dropdown hidden"></div>
+  <div id="menuOutput" class="menu-dropdown hidden"></div>
+  <div id="menuFont" class="menu-dropdown hidden"></div>
 
-<script src="script.js"></script>
-
+  <script src="script.js"></script>
 </body>
-</html>
+        </html>
