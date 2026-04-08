@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PsychNote Studio</title>
+  <title>PsychNote Workspace</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body class="font-inter">
+  <!-- TOPBAR -->
   <header class="topbar">
     <div class="topbar-left">
-      <button id="toggleLeft" class="icon-btn" type="button">☰</button>
+      <button id="toggleLeftPanel" class="icon-btn" type="button">☰</button>
       <div class="brand">
-        <div class="brand-title">PsychNote Studio</div>
-        <div class="brand-subtitle">rédaction clinique psychiatrique</div>
+        <div class="brand-title">PsychNote Workspace</div>
+        <div class="brand-subtitle">clinique + organisation + rédaction</div>
       </div>
     </div>
 
@@ -21,18 +22,22 @@
         <span>Type</span>
         <strong id="typeDisplay">administratif</strong>
       </button>
+
       <button class="top-pill" type="button" data-menu="menuSubType">
         <span>Sous-type</span>
         <strong id="subTypeDisplay">Rapport mutuelle</strong>
       </button>
+
       <button class="top-pill" type="button" data-menu="menuMode">
         <span>Mode</span>
         <strong id="modeDisplay">complet</strong>
       </button>
+
       <button class="top-pill" type="button" data-menu="menuOutput">
         <span>Sortie</span>
         <strong id="outputDisplay">texte</strong>
       </button>
+
       <button class="top-pill" type="button" data-menu="menuFont">
         <span>Police</span>
         <strong id="fontDisplay">inter</strong>
@@ -44,93 +49,103 @@
       <button id="btnQuestionnaire" class="action-btn" type="button">Questionnaire</button>
       <button id="btnCopy" class="action-btn" type="button">Copier</button>
       <button id="btnPrint" class="action-btn" type="button">Print</button>
-      <button id="toggleRight" class="icon-btn" type="button">≣</button>
+      <button id="toggleRightPanel" class="icon-btn" type="button">≣</button>
     </div>
   </header>
 
-  <div class="layout">
-    <!-- LEFT -->
-    <aside id="leftPanel" class="side side-left">
+  <div class="app-shell">
+    <!-- LEFT PANEL -->
+    <aside id="leftPanel" class="side-panel left-panel">
+      <div class="panel-toolbar">
+        <div class="panel-title">Organisation</div>
+        <div class="panel-toolbar-actions">
+          <button class="mini-btn" type="button" data-left-view="day">Jour</button>
+          <button class="mini-btn" type="button" data-left-view="week">Semaine</button>
+          <button class="mini-btn" type="button" data-left-view="halfday">Demi-journée</button>
+        </div>
+      </div>
+
       <div class="panel-scroll">
-
         <section class="block">
-          <div class="block-title">Identité</div>
+          <div class="block-title">Vue planning</div>
 
-          <label class="label">Nom / initiales</label>
-          <input id="patientName" class="input" type="text" placeholder="Madame X / Monsieur Y" />
+          <div class="field-label">Visualisation</div>
+          <div id="planningVisualChoices" class="token-wrap"></div>
 
-          <div class="grid-2">
-            <div>
-              <label class="label">Âge</label>
-              <input id="patientAge" class="input" type="number" min="0" max="120" placeholder="45" />
-            </div>
-            <div>
-              <label class="label">Date</label>
-              <input id="docDate" class="input" type="date" />
-            </div>
-          </div>
+          <div class="field-label">Jour / bloc type</div>
+          <div id="dayTemplateChoices" class="token-wrap"></div>
 
-          <label class="label">Genre</label>
-          <div id="genderChoices" class="token-wrap"></div>
-
-          <label class="label">Civilité</label>
-          <div id="civilityChoices" class="token-wrap"></div>
+          <div class="field-label">Bloc actif</div>
+          <div id="timeBlockChoices" class="token-wrap"></div>
         </section>
 
         <section class="block">
-          <div class="block-title">Architecture du texte</div>
+          <div class="block-title">Panier de tâches</div>
+
+          <textarea id="taskInbox" class="textarea lg" placeholder="Déposer ici toutes les tâches à répartir..."></textarea>
+
+          <div class="field-label">Types de tâches</div>
+          <div id="taskTypeChoices" class="token-wrap"></div>
+
+          <div class="field-label">Priorité</div>
+          <div id="taskPriorityChoices" class="token-wrap"></div>
+
+          <div class="field-label">Action rapide</div>
+          <div class="quick-row">
+            <button id="btnDistributeTasks" class="action-btn" type="button">Répartir</button>
+            <button id="btnSpinRoulette" class="action-btn" type="button">Roulette</button>
+          </div>
+        </section>
+
+        <section class="block">
+          <div class="block-title">Patients du bloc</div>
+
+          <textarea id="patientListInput" class="textarea" placeholder="Un patient par ligne"></textarea>
+
+          <div class="field-label">Checklist patient</div>
+          <div id="patientChecklistChoices" class="token-wrap"></div>
+
           <div class="hint">
-            Le texte se met à jour automatiquement selon le type, les mots cliqués et les champs remplis.
+            Idéal pour le 74, les consultations, les évolutions cliniques et les préadmissions.
           </div>
         </section>
 
         <section class="block">
-          <div class="block-title">Rapport mutuelle</div>
+          <div class="block-title">Objectifs quotidiens</div>
 
-          <label class="label">Diagnostic principal</label>
-          <div id="mutDxChoices" class="token-wrap"></div>
-          <input id="mutDxFree" class="input" type="text" placeholder="Autre diagnostic si besoin" />
+          <div class="field-label">Dossiers à fermer / jour</div>
+          <input id="dailyClosingGoal" class="input" type="number" min="0" placeholder="10" />
 
-          <label class="label">Au début de la prise en charge, le tableau était marqué par</label>
-          <div id="mutInitialChoices" class="token-wrap"></div>
-
-          <label class="label">Actuellement, il persiste</label>
-          <div id="mutCurrentChoices" class="token-wrap"></div>
-
-          <label class="label">Contexte / évolution</label>
-          <textarea id="mutContext" class="textarea" placeholder="Éléments de contexte utiles"></textarea>
-
-          <label class="label">Compatibilité avec reprise du travail</label>
-          <div id="mutWorkCompatChoices" class="token-wrap"></div>
-
-          <label class="label">Retentissement fonctionnel</label>
-          <div id="mutFunctionChoices" class="token-wrap"></div>
-          <textarea id="mutFunctionFree" class="textarea" placeholder="Précisions sur le retentissement"></textarea>
-
-          <label class="label">Conclusion / formule finale</label>
-          <div id="mutConclusionChoices" class="token-wrap"></div>
+          <div class="field-label">Suivi visuel</div>
+          <div id="dailyGoalChoices" class="token-wrap"></div>
         </section>
 
         <section class="block">
-          <div class="block-title">Motif et contexte libre</div>
-          <label class="label">Motif libre</label>
-          <input id="reasonFree" class="input" type="text" placeholder="Ex. trouble anxio-dépressif persistant" />
-          <label class="label">Contexte clinique</label>
-          <textarea id="contextFree" class="textarea lg" placeholder="Contexte, temporalité, éléments déclenchants..."></textarea>
+          <div class="block-title">Habitudes</div>
+
+          <div class="field-label">Habitudes suivies</div>
+          <div id="habitChoices" class="token-wrap"></div>
+
+          <div class="field-label">Vue horizontale</div>
+          <div class="habit-grid" id="habitGrid">
+            <!-- rempli par JS -->
+          </div>
         </section>
 
         <section class="block">
-          <div class="block-title">Plan / recommandations</div>
-          <div id="planChoices" class="token-wrap"></div>
-          <textarea id="planFree" class="textarea" placeholder="Recommandations / suite"></textarea>
-        </section>
+          <div class="block-title">Historique / projection</div>
 
+          <div class="field-label">Vue</div>
+          <div id="historyViewChoices" class="token-wrap"></div>
+
+          <textarea id="historyNotes" class="textarea" placeholder="Semaine passée, semaine à venir, éléments marquants..."></textarea>
+        </section>
       </div>
     </aside>
 
     <!-- CENTER -->
-    <main class="center">
-      <div class="center-head">
+    <main class="center-panel">
+      <div class="center-top">
         <div class="meta-chip">
           <span>Type</span>
           <strong id="metaType">administratif</strong>
@@ -145,140 +160,183 @@
         </div>
       </div>
 
-      <textarea id="output" class="output" spellcheck="false" placeholder="Le texte généré apparaîtra ici."></textarea>
+      <textarea id="output" class="output" spellcheck="false" placeholder="Le texte généré apparaîtra ici en direct."></textarea>
     </main>
 
-    <!-- RIGHT -->
-    <aside id="rightPanel" class="side side-right">
+    <!-- RIGHT PANEL -->
+    <aside id="rightPanel" class="side-panel right-panel">
+      <div class="panel-toolbar">
+        <div class="panel-title">Clinique</div>
+        <div class="panel-toolbar-actions">
+          <button class="mini-btn" type="button" data-right-section="mse">Examen</button>
+          <button class="mini-btn" type="button" data-right-section="treatment">Traitement</button>
+          <button class="mini-btn" type="button" data-right-section="psycho">Psychosocial</button>
+          <button class="mini-btn" type="button" data-right-section="mutuelle">Mutuelle</button>
+        </div>
+      </div>
+
       <div class="panel-scroll">
+        <section class="block">
+          <div class="block-title">Genre / grammaire</div>
+          <div id="genderChoices" class="token-wrap"></div>
+          <div id="civilityChoices" class="token-wrap"></div>
+        </section>
 
         <section class="block">
           <div class="block-title">Examen clinique / mental</div>
 
-          <label class="label">Version d’examen</label>
+          <div class="field-label">Version</div>
           <div id="mseModeChoices" class="token-wrap"></div>
 
-          <label class="label">Orientation</label>
+          <div class="field-label">Orientation</div>
           <div id="mseOrientationChoices" class="token-wrap"></div>
 
-          <label class="label">Contact</label>
+          <div class="field-label">Contact</div>
           <div id="mseContactChoices" class="token-wrap"></div>
 
-          <label class="label">Présentation</label>
+          <div class="field-label">Présentation</div>
           <div id="msePresentationChoices" class="token-wrap"></div>
 
-          <label class="label">Collaboration</label>
+          <div class="field-label">Collaboration</div>
           <div id="mseCollaborationChoices" class="token-wrap"></div>
 
-          <label class="label">Psychomotricité</label>
+          <div class="field-label">Psychomotricité</div>
           <div id="msePsychomotorChoices" class="token-wrap"></div>
 
-          <label class="label">Humeur</label>
+          <div class="field-label">Humeur</div>
           <div id="mseMoodChoices" class="token-wrap"></div>
 
-          <label class="label">Anxiété</label>
+          <div class="field-label">Anxiété</div>
           <div id="mseAnxietyChoices" class="token-wrap"></div>
 
-          <label class="label">Pensée / réalité</label>
+          <div class="field-label">Pensée / réalité</div>
           <div id="mseThoughtChoices" class="token-wrap"></div>
 
-          <label class="label">Trauma</label>
+          <div class="field-label">Trauma</div>
           <div id="mseTraumaChoices" class="token-wrap"></div>
 
-          <label class="label">Idées noires</label>
+          <div class="field-label">Idées noires</div>
           <div id="riskIdeasChoices" class="token-wrap"></div>
 
-          <label class="label">Passage à l’acte / ATCD</label>
+          <div class="field-label">ATCD passage à l’acte</div>
           <div id="riskAttemptChoices" class="token-wrap"></div>
 
-          <label class="label">Comportement</label>
+          <div class="field-label">Comportement</div>
           <div id="mseBehaviorChoices" class="token-wrap"></div>
 
-          <label class="label">Sommeil</label>
+          <div class="field-label">Sommeil</div>
           <div id="mseSleepChoices" class="token-wrap"></div>
 
-          <label class="label">Alimentation</label>
+          <div class="field-label">Alimentation</div>
           <div id="mseFoodChoices" class="token-wrap"></div>
 
-          <label class="label">Précisions libres</label>
-          <textarea id="mseFree" class="textarea" placeholder="Éléments cliniques supplémentaires"></textarea>
+          <div class="field-label">Compléments libres</div>
+          <textarea id="mseFree" class="textarea" placeholder="Précisions supplémentaires"></textarea>
         </section>
 
         <section class="block">
           <div class="block-title">Traitement</div>
 
-          <label class="label">Type de prise en charge</label>
+          <div class="field-label">Type de prise en charge</div>
           <div id="careTypeChoices" class="token-wrap"></div>
 
-          <label class="label">Médication en place ?</label>
+          <div class="field-label">Médication</div>
           <div id="medicationPresenceChoices" class="token-wrap"></div>
 
-          <label class="label">Classe</label>
+          <div class="field-label">Classe</div>
           <div id="medClassChoices" class="token-wrap"></div>
 
-          <label class="label">Molécule</label>
+          <div class="field-label">Molécule</div>
           <div id="medMoleculeChoices" class="token-wrap"></div>
 
-          <label class="label">Posologie</label>
+          <div class="field-label">Posologie</div>
           <input id="medDose" class="input" type="text" placeholder="Ex. 50 mg/j" />
 
-          <label class="label">Résumé traitement</label>
+          <div class="field-label">Résumé traitement</div>
           <textarea id="treatment" class="textarea lg" placeholder="Une ligne par traitement"></textarea>
         </section>
 
         <section class="block">
-          <div class="block-title">Situation psychosociale</div>
+          <div class="block-title">Psychosocial</div>
 
-          <label class="label">Travail</label>
+          <div class="field-label">Travail</div>
           <div id="psyWorkChoices" class="token-wrap"></div>
 
-          <label class="label">Revenus</label>
+          <div class="field-label">Revenus</div>
           <div id="psyIncomeChoices" class="token-wrap"></div>
 
-          <label class="label">Famille / entourage</label>
+          <div class="field-label">Famille</div>
           <div id="psyFamilyChoices" class="token-wrap"></div>
 
-          <label class="label">Enfants</label>
+          <div class="field-label">Enfants</div>
           <input id="psyChildren" class="input" type="text" placeholder="Ex. 2 enfants, 5 et 8 ans" />
 
-          <label class="label">Logement</label>
+          <div class="field-label">Logement</div>
           <div id="psyHousingChoices" class="token-wrap"></div>
 
-          <label class="label">Compléments</label>
+          <div class="field-label">Compléments</div>
           <textarea id="psyFree" class="textarea" placeholder="Autres éléments psychosociaux"></textarea>
         </section>
 
+        <section class="block">
+          <div class="block-title">Rapport mutuelle</div>
+
+          <div class="field-label">Diagnostic</div>
+          <div id="mutDxChoices" class="token-wrap"></div>
+          <input id="mutDxFree" class="input" type="text" placeholder="Autre diagnostic" />
+
+          <div class="field-label">Au début de la prise en charge</div>
+          <div id="mutInitialChoices" class="token-wrap"></div>
+
+          <div class="field-label">Actuellement</div>
+          <div id="mutCurrentChoices" class="token-wrap"></div>
+
+          <div class="field-label">Contexte / évolution</div>
+          <textarea id="mutContext" class="textarea" placeholder="Contexte libre"></textarea>
+
+          <div class="field-label">Compatibilité travail</div>
+          <div id="mutWorkCompatChoices" class="token-wrap"></div>
+
+          <div class="field-label">Retentissement fonctionnel</div>
+          <div id="mutFunctionChoices" class="token-wrap"></div>
+          <textarea id="mutFunctionFree" class="textarea" placeholder="Précisions fonctionnelles"></textarea>
+
+          <div class="field-label">Conclusion</div>
+          <div id="mutConclusionChoices" class="token-wrap"></div>
+        </section>
       </div>
     </aside>
   </div>
 
-  <!-- BOTTOM BAR -->
+  <!-- BOTTOM -->
   <footer class="bottom-bar">
     <div class="bottom-scroll">
-      <div class="bottom-card">
+      <section class="bottom-card">
         <div class="bottom-title">Consommation alcool</div>
         <div id="alcTypeChoices" class="token-wrap compact"></div>
         <div id="alcPatternChoices" class="token-wrap compact"></div>
         <div id="alcFunctionChoices" class="token-wrap compact"></div>
         <div id="alcDependenceChoices" class="token-wrap compact"></div>
         <div id="alcWithdrawalChoices" class="token-wrap compact"></div>
+
         <div class="grid-3">
           <input id="alcQty" class="input" type="text" placeholder="Quantité" />
           <input id="alcLast" class="input" type="text" placeholder="Dernière prise" />
           <input id="alcStart" class="input" type="text" placeholder="Début" />
         </div>
+
         <input id="alcCharacter" class="input" type="text" placeholder="Social / solitaire / mixte" />
         <textarea id="alcFree" class="textarea" placeholder="Détails alcool"></textarea>
-      </div>
+      </section>
 
-      <div class="bottom-card">
+      <section class="bottom-card">
         <div class="bottom-title">Autres substances</div>
         <div id="otherSubstanceChoices" class="token-wrap compact"></div>
         <div id="otherSubstanceFunctionChoices" class="token-wrap compact"></div>
         <textarea id="otherSubstances" class="textarea" placeholder="Autres consommations"></textarea>
-      </div>
+      </section>
 
-      <div class="bottom-card">
+      <section class="bottom-card">
         <div class="bottom-title">Schéma de sevrage</div>
         <div class="grid-2">
           <select id="withdrawDrug" class="input">
@@ -291,26 +349,30 @@
             <option value="lent">Lent</option>
           </select>
         </div>
+
         <div class="grid-2">
           <input id="withdrawDose" class="input" type="number" min="1" placeholder="Dose départ mg" />
           <input id="withdrawDays" class="input" type="number" min="2" placeholder="Nb jours" />
         </div>
+
         <input id="withdrawStartDate" class="input" type="date" />
         <button id="btnBuildWithdrawal" class="action-btn wide" type="button">Construire le schéma</button>
         <textarea id="withdrawOutput" class="textarea lg" placeholder="Schéma"></textarea>
-      </div>
+      </section>
 
-      <div class="bottom-card">
-        <div class="bottom-title">Actions / presets</div>
+      <section class="bottom-card">
+        <div class="bottom-title">Presets / actions</div>
         <div id="presetWrap" class="token-wrap compact"></div>
+
         <div class="bottom-actions">
           <button id="btnSave" class="action-btn" type="button">Sauver</button>
           <button id="btnLoad" class="action-btn" type="button">Recharger</button>
-          <button id="btnReset" class="action-btn" type="button">Réinitialiser</button>
+          <button id="btnReset" class="action-btn" type="button">Reset</button>
           <button id="btnDemo" class="action-btn" type="button">Démo</button>
         </div>
+
         <div id="warnings" class="warnings">Aucune alerte.</div>
-      </div>
+      </section>
     </div>
   </footer>
 
@@ -323,4 +385,4 @@
 
   <script src="script.js"></script>
 </body>
-        </html>
+            </html>
