@@ -6,55 +6,49 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 
-<body class="font-inter">
+<body>
 
 <div class="app">
 
-  <!-- SIDEBAR -->
   <aside id="sidebar" class="sidebar">
 
-    <div class="brand">REDACTOR</div>
+    <h1>REDACTOR</h1>
 
     <div class="block">
-      <label>TYPE</label>
-      <div id="typeChoices" class="chips"></div>
+      <label>Type</label>
+      <div id="typeChoices"></div>
     </div>
 
     <div class="block">
-      <label>MODE</label>
-      <div id="modeChoices" class="chips"></div>
+      <label>Symptômes</label>
+      <div id="symptomChoices"></div>
     </div>
 
     <div class="block">
-      <label>SYMPTÔMES</label>
-      <div id="symptomChoices" class="chips"></div>
+      <label>Plan</label>
+      <div id="planChoices"></div>
     </div>
 
     <div class="block">
-      <label>PLAN</label>
-      <div id="planChoices" class="chips"></div>
-    </div>
-
-    <div class="block">
-      <label>MODULES</label>
-      <div class="chips">
-        <span onclick="openModal('alcool')">alcool</span>
-        <span onclick="openModal('mse')">examen</span>
-        <span onclick="openModal('todo')">todo</span>
-      </div>
+      <label>Modules</label>
+      <button onclick="openAlcohol()">alcool</button>
     </div>
 
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
 
     <div class="topbar">
       <button onclick="toggleSidebar()">☰</button>
-
-      <div class="actions">
-        <button onclick="generateText()">texte</button>
-        <button onclick="generateQuestionnaire()">questionnaire</button>
-        <button onclick="generateTodo()">todo</button>
-      </div>
     </div>
+
+    <textarea id="output"></textarea>
+
+  </main>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
