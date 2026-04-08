@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>REDACTOR</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="font-inter">
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="sidebar">
+
+    <div class="sidebar-header">
+      <h1>REDACTOR</h1>
+    </div>
+
+    <!-- TYPE -->
+    <section>
+      <h4>Type</h4>
+      <div id="typeChoices" class="choices"></div>
+    </section>
+
+    <!-- MODE -->
+    <section>
+      <h4>Mode</h4>
+      <div id="modeChoices" class="choices"></div>
+    </section>
+
+    <!-- EXAMEN -->
+    <section>
+      <h4>Examen mental</h4>
+      <div id="mseChoices" class="choices"></div>
+    </section>
+
+    <!-- SYMPTÔMES -->
+    <section>
+      <h4>Symptômes</h4>
+      <div id="symptomChoices" class="choices"></div>
+    </section>
+
+    <!-- PLAN -->
+    <section>
+      <h4>Plan</h4>
+      <div id="planChoices" class="choices"></div>
+    </section>
+
+    <!-- MODULES -->
+    <section>
+      <h4>Modules</h4>
+      <div class="choices">
+        <button onclick="openModal('alcool')">alcool</button>
+        <button onclick="openModal('mse')">examen</button>
+        <button onclick="openModal('todo')">todo</button>
+      </div>
+    </section>
+
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+
+      <button onclick="toggleSidebar()">☰</button>
+
+      <div class="actions">
+        <button onclick="generateText()">générer</button>
+        <button onclick="generateQuestionnaire()">questionnaire</button>
+        <button onclick="generateTodo()">todo</button>
+      </div>
+
+    </div>
+
+    <!-- TEXTE -->
+    <div class="editor">
+
+      <textarea id="output" placeholder="Le texte apparaît ici..."></textarea>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script src="script.js"></script>
+
+</body>
+</html>
