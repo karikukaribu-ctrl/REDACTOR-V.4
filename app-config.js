@@ -1,640 +1,1187 @@
-const STORAGE_KEY = "psychnote_studio_v2";
+// app-config.js
+// Source unique de vérité pour les options, presets et structures V7
 
-const state = {
-  type: "administratif",
-  subType: "Rapport mutuelle",
-  mode: "complet",
-  output: "texte",
-  font: "inter",
-  gender: "femme",
-  civility: "auto",
-  selected: {},
-  todoSet: "",
-  withdrawalPlanText: ""
-};
+export const APP_STORAGE_KEY = "psychnote_v7_modular";
 
-const OPTIONS = {
-  type: ["consultation", "urgences", "hospitalisation", "préadmission", "administratif", "mail"],
-  subTypes: {
-    consultation: ["Première consultation", "Suivi", "Note courte", "Courrier médecin traitant", "Consultation de crise", "Avis diagnostique"],
-    urgences: ["Évaluation urgences", "Décision / orientation"],
-    hospitalisation: ["Admission", "Semaine 1", "Semaine 2", "Évolution intermédiaire", "Sortie", "Synthèse d’hospitalisation"],
-    préadmission: ["Évaluation de préadmission", "Conclusion d’indication"],
-    administratif: ["Rapport mutuelle", "Rapport assurance / autre", "Attestation simple", "Attestation de présence", "Attestation de suivi", "Certificat médical", "Certificat incapacité", "Certificat circonstancié simple"],
-    mail: ["Réponse simple", "Réponse patient", "Réponse médecin / confrère", "Transmission clinique brève", "Relance", "Confirmation de rendez-vous"]
-  },
-  mode: ["rapide", "complet"],
-  output: ["texte", "questionnaire"],
-  font: ["inter", "mono", "serif"],
-  gender: ["femme", "homme"],
-  civility: ["auto", "madame", "monsieur"],
+export const TYPE_OPTIONS = [
+  "consultation",
+  "urgences",
+  "hospitalisation",
+  "préadmission",
+  "administratif",
+  "mail"
+];
 
-  mutDxChoices: [
-    "trouble anxio-dépressif persistant",
-    "trouble anxio-dépressif",
-    "dépression chronique",
-    "trouble dépressif caractérisé",
-    "trouble anxieux généralisé",
-    "symptomatologie anxio-dépressive",
-    "trouble de l’adaptation avec humeur anxio-dépressive"
+export const SUBTYPE_OPTIONS = {
+  consultation: [
+    "première consultation",
+    "suivi",
+    "note courte",
+    "courrier médecin traitant",
+    "consultation de crise",
+    "avis diagnostique"
   ],
-  mutInitialChoices: [
-    "une anxiété envahissante",
-    "une anhédonie marquée",
-    "une perte d’élan vital",
-    "des idées noires intermittentes",
-    "des troubles du sommeil",
-    "un isolement social important",
-    "des ruminations anxieuses",
-    "une fatigabilité importante",
-    "des difficultés de concentration",
-    "un ralentissement global"
+  urgences: [
+    "évaluation urgences",
+    "décision / orientation"
   ],
-  mutCurrentChoices: [
-    "une symptomatologie anxieuse persistante",
-    "une anhédonie encore marquée",
-    "des ruminations envahissantes",
-    "une fatigabilité importante",
-    "des troubles du sommeil",
-    "une baisse de l’élan",
-    "des difficultés de concentration",
-    "une fragilité clinique persistante",
-    "une amélioration seulement partielle"
+  hospitalisation: [
+    "admission semaine 1",
+    "admission semaine 2",
+    "évolution en cours",
+    "sortie semaine 1",
+    "sortie semaine 2",
+    "synthèse d’hospitalisation"
   ],
-  mutWorkCompatChoices: [
-    "compatible",
-    "partiellement compatible",
-    "non compatible"
+  "préadmission": [
+    "évaluation de préadmission",
+    "conclusion d’indication"
   ],
-  mutFunctionChoices: [
-    "altération de la concentration",
-    "altération de l’organisation",
-    "fatigabilité importante",
-    "difficulté à maintenir un rythme soutenu",
-    "difficulté d’adaptation au cadre professionnel",
-    "retentissement fonctionnel global"
+  administratif: [
+    "rapport mutuelle",
+    "rapport assurance / autre",
+    "attestation simple",
+    "attestation de présence",
+    "attestation de suivi",
+    "certificat médical",
+    "certificat incapacité",
+    "certificat circonstancié simple"
   ],
-  mutConclusionChoices: [
-    "poursuite du traitement encouragée",
-    "poursuite du suivi psychiatrique encouragée",
-    "réévaluation ultérieure recommandée",
-    "je reste à disposition pour de plus amples informations"
-  ],
-
-  planChoices: [
-    "poursuite du suivi psychiatrique",
-    "surveillance clinique",
-    "évaluation addictologique",
-    "travail psychoéducatif",
-    "coordination avec le réseau",
-    "contact familial si accord",
-    "adaptation thérapeutique",
-    "préparation de sortie",
-    "plan de crise",
-    "proposer hospitalisation",
-    "mise en sécurité",
-    "réévaluation rapide",
-    "soutien ambulatoire",
-    "orientation psychothérapie"
-  ],
-
-  mseModeChoices: ["rapide", "complet"],
-  mseOrientationChoices: ["bien orienté dans le temps et l’espace", "partiellement désorienté", "désorienté"],
-  mseContactChoices: ["contact adéquat", "contact distant", "contact méfiant", "contact fuyant", "contact engageant"],
-  msePresentationChoices: ["présentation soignée", "présentation correcte", "présentation négligée"],
-  mseCollaborationChoices: ["bonne collaboration", "collaboration partielle", "collaboration limitée"],
-  msePsychomotorChoices: ["absence de ralentissement psychomoteur", "ralentissement psychomoteur", "agitation psychomotrice"],
-  mseMoodChoices: ["humeur triste", "humeur anxieuse", "humeur abaissée", "humeur irritable", "humeur fragile", "humeur stable"],
-  mseAnxietyChoices: ["anxiété diffuse", "ruminations anxieuses", "tension interne", "angoisse majeure", "hypervigilance"],
-  mseThoughtChoices: ["discours cohérent", "pensée organisée", "ruminations", "pas d’élément délirant", "éléments délirants", "pas de désorganisation", "éléments traumatiques"],
-  mseTraumaChoices: ["hypervigilance", "reviviscences", "évitement", "pas d’élément traumatique mis en avant"],
-  riskIdeasChoices: ["absence", "passives", "actives"],
-  riskAttemptChoices: ["pas d’antécédent de passage à l’acte", "antécédent(s) de passage à l’acte"],
-  mseBehaviorChoices: ["comportement adapté", "attitude de retrait", "évitement", "agitation", "coopérant"],
-  mseSleepChoices: ["sommeil conservé", "insomnie", "réveils nocturnes", "sommeil non réparateur", "endormissement difficile"],
-  mseFoodChoices: ["alimentation conservée", "appétit diminué", "alimentation irrégulière"],
-
-  careTypeChoices: [
-    "suivi psychiatrique régulier",
-    "psychothérapie",
-    "prise en charge pluridisciplinaire",
-    "centre de jour",
-    "accompagnement ambulatoire"
-  ],
-  medicationPresenceChoices: [
-    "sans traitement médicamenteux",
-    "avec traitement médicamenteux en cours"
-  ],
-  medClassChoices: [
-    "ISRS",
-    "IRSNa",
-    "antipsychotique",
-    "benzodiazépine",
-    "hypnotique",
-    "autre"
-  ],
-  medMoleculeChoices: [
-    "sertraline",
-    "escitalopram",
-    "fluoxétine",
-    "venlafaxine",
-    "duloxétine",
-    "aripiprazole",
-    "quétiapine",
-    "olanzapine",
-    "trazodone",
-    "diazépam",
-    "lorazépam"
-  ],
-
-  psyWorkChoices: [
-    "travail",
-    "arrêt de travail",
-    "incapacité",
-    "chômage",
-    "sans activité",
-    "études"
-  ],
-  psyIncomeChoices: [
-    "salaire",
-    "mutuelle",
-    "chômage",
-    "CPAS",
-    "revenus à préciser"
-  ],
-  psyFamilyChoices: [
-    "vit seul",
-    "vit en couple",
-    "soutien familial",
-    "conflits familiaux",
-    "enfants à charge",
-    "réseau limité"
-  ],
-  psyHousingChoices: [
-    "logement stable",
-    "hébergé",
-    "chez les parents",
-    "logement instable",
-    "institution"
-  ],
-
-  alcTypeChoices: ["bière", "vin", "alcool fort", "mixte"],
-  alcPatternChoices: ["quotidien", "épisodique", "binge", "majoré le soir", "avec consommation matinale"],
-  alcFunctionChoices: ["anxiolytique", "sommeil", "socialisation", "gestion émotion", "habitude", "solitude"],
-  alcDependenceChoices: ["craving", "perte de contrôle", "tolérance", "symptômes de sevrage", "retentissement social", "retentissement professionnel"],
-  alcWithdrawalChoices: ["ambulatoire", "hospitalier", "sevrage simple", "sevrage compliqué", "DT", "convulsions"],
-
-  otherSubstanceChoices: ["cannabis", "cocaïne", "benzodiazépines", "opiacés", "tabac", "autres"],
-  otherSubstanceFunctionChoices: ["anxiolytique", "stimulation", "sommeil", "gestion émotion", "habitude"],
-
-  presets: [
-    "Rapport mutuelle anxio-dépressif",
-    "Rapport mutuelle dépression chronique",
-    "Sevrage alcool simple",
-    "Crise suicidaire"
+  mail: [
+    "réponse simple",
+    "réponse patient",
+    "réponse médecin / confrère",
+    "transmission clinique brève",
+    "relance",
+    "confirmation de rendez-vous"
   ]
 };
 
-const MULTI = new Set([
-  "mutDxChoices","mutInitialChoices","mutCurrentChoices","mutFunctionChoices","mutConclusionChoices",
-  "planChoices",
-  "mseOrientationChoices","mseContactChoices","msePresentationChoices","mseCollaborationChoices","msePsychomotorChoices","mseMoodChoices","mseAnxietyChoices","mseThoughtChoices","mseTraumaChoices","riskAttemptChoices","mseBehaviorChoices","mseSleepChoices","mseFoodChoices",
-  "careTypeChoices","medicationPresenceChoices","medClassChoices","medMoleculeChoices",
-  "psyWorkChoices","psyIncomeChoices","psyFamilyChoices","psyHousingChoices",
-  "alcTypeChoices","alcPatternChoices","alcFunctionChoices","alcDependenceChoices","alcWithdrawalChoices",
-  "otherSubstanceChoices","otherSubstanceFunctionChoices",
-  "planChoices"
-]);
+export const MODE_OPTIONS = ["rapide", "complet", "élaboré"];
+export const OUTPUT_OPTIONS = ["texte", "questionnaire", "todo"];
 
-for(const key of MULTI){
-  state.selected[key] = [];
-}
-state.selected.mutWorkCompatChoices = "";
-state.selected.mseModeChoices = "complet";
-state.selected.riskIdeasChoices = "";
-state.selected.gender = state.gender;
-state.selected.civility = state.civility;
+export const APPEARANCE_OPTIONS = {
+  themeModeChoices: ["clair", "sombre"],
+  seasonChoices: ["printemps", "été", "automne", "hiver"],
+  fontChoices: ["inter", "classic", "serif", "hand", "anime"],
+  transparencyChoices: ["low", "medium", "high"],
+  shadowChoices: ["off", "soft", "on"]
+};
 
-const $ = (id) => document.getElementById(id);
+export const RIGHT_VIEW_OPTIONS = ["todo", "history", "patients", "week"];
+export const WINDOW_NAMES = [
+  "mainEncodingWindow",
+  "examWindow",
+  "treatmentWindow",
+  "psychosocialWindow",
+  "antecedentsWindow",
+  "riskWindow",
+  "consumptionWindow",
+  "withdrawalWindow",
+  "mailResponseWindow",
+  "todoWindow",
+  "presetsWindow",
+  "appearanceWindow"
+];
 
-function cleanText(s){
-  return (s || "").replace(/\s+/g, " ").trim();
-}
+export const DOCUMENT_KIND = {
+  MAIN: "main",
+  LETTER: "letter"
+};
 
-function sentence(s){
-  const t = cleanText(s);
-  if(!t) return "";
-  return /[.!?]$/.test(t) ? t : t + ".";
-}
+export const MAIN_FREQUENT_MOTIVES = [
+  "anxiété",
+  "humeur dépressive",
+  "crise suicidaire",
+  "idéations suicidaires",
+  "insomnie",
+  "demande de sevrage alcool",
+  "consommations problématiques",
+  "attaque de panique",
+  "souffrance psychosociale",
+  "évaluation diagnostique",
+  "trouble du comportement",
+  "décompensation anxieuse",
+  "décompensation thymique",
+  "conflit familial",
+  "retentissement fonctionnel important"
+];
 
-function titleCase(s){
-  if(!s) return "";
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+export const MAIN_FREQUENT_SYMPTOMS = [
+  "ruminations",
+  "anhédonie",
+  "fatigabilité",
+  "hypervigilance",
+  "troubles du sommeil",
+  "tension interne",
+  "irritabilité",
+  "aboulie",
+  "repli",
+  "hallucinations auditives rapportées",
+  "angoisse",
+  "sentiment d’épuisement",
+  "baisse de l’élan",
+  "culpabilité",
+  "difficultés de concentration"
+];
 
-function cap(s){
-  const t = cleanText(s);
-  return t ? t.charAt(0).toUpperCase() + t.slice(1) : "";
-}
+export const MAIN_FREQUENT_PLANS = [
+  "poursuite du suivi psychiatrique",
+  "surveillance clinique",
+  "évaluation addictologique",
+  "travail psychoéducatif",
+  "coordination avec le réseau",
+  "contact familial si accord",
+  "adaptation thérapeutique",
+  "préparation de sortie",
+  "plan de crise",
+  "proposer hospitalisation",
+  "mise en sécurité",
+  "réévaluation rapide",
+  "soutien ambulatoire",
+  "orientation psychothérapie"
+];
 
-function joinClinical(arr){
-  const items = (arr || []).filter(Boolean);
-  if(!items.length) return "";
-  if(items.length === 1) return items[0];
-  if(items.length === 2) return `${items[0]} et ${items[1]}`;
-  return `${items.slice(0, -1).join(", ")} et ${items[items.length - 1]}`;
-}
+export const ALCOHOL_FUNCTION_QUICK = [
+  "anxiolytique",
+  "sommeil",
+  "socialisation",
+  "gestion émotion",
+  "solitude",
+  "ennui",
+  "habitude",
+  "impulsivité",
+  "couper les pensées"
+];
 
-function pick(arr){
-  return arr[Math.floor(Math.random() * arr.length)];
-}
+export const SMART_PRESET_OPTIONS = [
+  "anxio-dépressif",
+  "crise suicidaire",
+  "sevrage alcool simple",
+  "sevrage alcool compliqué",
+  "insomnie / anxiété",
+  "trauma probable"
+];
 
-function genderPack(){
-  const isMale = state.gender === "homme";
-  const civ = state.civility === "auto"
-    ? (isMale ? "Monsieur" : "Madame")
-    : (state.civility === "monsieur" ? "Monsieur" : "Madame");
+export const DOC_VERSION_OPTIONS = ["rapide", "complet", "élargi"];
+export const STRUCTURE_PRESET_OPTIONS = [
+  "intro + clinique + plan",
+  "motif + contexte + examen + plan",
+  "évolution + examen + traitement + projection",
+  "mutuelle structurée",
+  "mail bref structuré",
+  "admission complète sevrage"
+];
 
-  return {
-    isMale,
-    civ,
-    patient: isMale ? "patient" : "patiente",
-    Patient: isMale ? "Patient" : "Patiente",
-    orienté: isMale ? "orienté" : "orientée",
-    suivi: isMale ? "suivi" : "suivie",
-    présenté: isMale ? "présenté" : "présentée"
-  };
-}
+export const WRITING_BLOCK_OPTIONS = [
+  "évolution générale",
+  "motif / demande",
+  "contexte / histoire",
+  "examen clinique / mental",
+  "consommations",
+  "psychosocial",
+  "antécédents",
+  "traitement",
+  "retentissement fonctionnel",
+  "projection / suite",
+  "conclusion"
+];
 
-function getPatientLabel(){
-  const g = genderPack();
-  const name = cleanText($("patientName").value);
-  return name ? `${g.civ} ${name}` : g.civ;
-}
+export const WRITING_PHRASE_OPTIONS = [
+  "Je vois en consultation de psychiatrie…",
+  "Au début de la prise en charge…",
+  "Actuellement, il persiste…",
+  "Sur le plan clinique…",
+  "Le retentissement fonctionnel est marqué par…",
+  "La poursuite du traitement est encouragée…",
+  "Je reste à disposition pour de plus amples informations…"
+];
 
-function setToday(){
-  const d = new Date();
-  const p = n => String(n).padStart(2, "0");
-  const val = `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
-  $("docDate").value = val;
-  $("withdrawStartDate").value = val;
-}
+export const HOSPITAL_WEEK1_OPTIONS = [
+  "motivation",
+  "orientation / contexte",
+  "type de consommation",
+  "histoire de la consommation",
+  "fonction de la consommation",
+  "autres consommations",
+  "ATCD psychiatriques",
+  "ATCD de sevrage",
+  "suivi en cours",
+  "examen mental complet"
+];
 
-function renderMenu(id, options, current, targetKey){
-  $(id).innerHTML = options.map(opt => `
-    <button class="menu-item ${current === opt ? "active" : ""}" type="button" data-menu-key="${targetKey}" data-value="${opt}">
-      ${titleCase(opt)}
-    </button>
-  `).join("");
-}
+export const HOSPITAL_WEEK2_OPTIONS = [
+  "retour sur la semaine intermédiaire",
+  "abstinence ou reconsommation",
+  "date et contexte de reconsommation",
+  "analyse par le patient",
+  "examen clinique bref",
+  "suivi envisagé",
+  "appréciation générale"
+];
 
-function renderTokens(id, options, key, single=false){
-  const el = $(id);
-  if(!el) return;
+export const HOSPITAL_EVOLUTION_OPTIONS = [
+  "évolution clinique",
+  "tolérance du sevrage",
+  "qualité des entretiens",
+  "axe d’élaboration",
+  "craving ou non",
+  "prise de conscience",
+  "ajustements thérapeutiques",
+  "réflexion sur le suivi",
+  "sortie semaine 1",
+  "sortie semaine 2"
+];
 
-  const current = state.selected[key];
+export const ADMINISTRATIVE_QUICK_OPTIONS = [
+  "rapport mutuelle",
+  "rapport assurance",
+  "attestation simple",
+  "attestation de présence",
+  "attestation de suivi",
+  "certificat médical",
+  "certificat incapacité"
+];
 
-  el.innerHTML = options.map(opt => {
-    const active = single
-      ? current === opt
-      : (current || []).includes(opt);
+export const LETTER_QUICK_OPTIONS = [
+  "courrier médecin traitant",
+  "courrier confrère",
+  "réponse patient",
+  "transmission clinique",
+  "confirmation de rendez-vous",
+  "relance",
+  "report"
+];
 
-    return `<button class="token ${active ? "active" : ""}" type="button" data-token-key="${key}" data-value="${opt}" data-single="${single ? "1" : "0"}">${opt}</button>`;
-  }).join("");
-}
+export const TONE_QUICK_OPTIONS = [
+  "sobre",
+  "professionnel",
+  "direct",
+  "chaleureux"
+];
 
-function renderUI(){
-  $("typeDisplay").textContent = state.type;
-  $("subTypeDisplay").textContent = state.subType;
-  $("modeDisplay").textContent = state.mode;
-  $("outputDisplay").textContent = state.output;
-  $("fontDisplay").textContent = state.font;
+export const PLANNING_VISUAL_OPTIONS = ["liste", "ligne du temps", "tableau de bord"];
+export const DAY_TEMPLATE_OPTIONS = [
+  "lundi matin 74",
+  "lundi après-midi consultations",
+  "mardi matin entretiens 74",
+  "mardi après-midi préadmissions",
+  "journée mixte",
+  "demi-journée légère",
+  "demi-journée lourde"
+];
 
-  $("metaType").textContent = state.type;
-  $("metaSubType").textContent = state.subType;
-  $("metaMode").textContent = state.mode;
+export const TIME_BLOCK_OPTIONS = [
+  "matin",
+  "après-midi",
+  "demi-journée complète",
+  "bloc administratif",
+  "bloc rapports",
+  "bloc mails"
+];
 
-  renderMenu("menuType", OPTIONS.type, state.type, "type");
-  renderMenu("menuSubType", OPTIONS.subTypes[state.type], state.subType, "subType");
-  renderMenu("menuMode", OPTIONS.mode, state.mode, "mode");
-  renderMenu("menuOutput", OPTIONS.output, state.output, "output");
-  renderMenu("menuFont", OPTIONS.font, state.font, "font");
+export const HALF_DAY_OPTIONS = [
+  "lundi matin",
+  "lundi après-midi",
+  "mardi matin",
+  "mardi après-midi",
+  "mercredi matin",
+  "mercredi après-midi",
+  "jeudi matin",
+  "jeudi après-midi",
+  "vendredi matin",
+  "vendredi après-midi"
+];
 
-  renderTokens("genderChoices", OPTIONS.gender, "gender", true);
-  renderTokens("civilityChoices", OPTIONS.civility, "civility", true);
+export const TASK_TYPE_OPTIONS = [
+  "rapport",
+  "mail",
+  "appel",
+  "consultation",
+  "administratif",
+  "organisation",
+  "lecture",
+  "facturation",
+  "préparation réunion",
+  "suivi patient",
+  "clôture dossier",
+  "préadmission sevrage"
+];
 
-  renderTokens("mutDxChoices", OPTIONS.mutDxChoices, "mutDxChoices");
-  renderTokens("mutInitialChoices", OPTIONS.mutInitialChoices, "mutInitialChoices");
-  renderTokens("mutCurrentChoices", OPTIONS.mutCurrentChoices, "mutCurrentChoices");
-  renderTokens("mutWorkCompatChoices", OPTIONS.mutWorkCompatChoices, "mutWorkCompatChoices", true);
-  renderTokens("mutFunctionChoices", OPTIONS.mutFunctionChoices, "mutFunctionChoices");
-  renderTokens("mutConclusionChoices", OPTIONS.mutConclusionChoices, "mutConclusionChoices");
+export const TASK_PRIORITY_OPTIONS = ["haute", "moyenne", "basse"];
+export const TASK_ENERGY_OPTIONS = ["très simple", "simple", "moyen", "lourd"];
+export const TODO_SET_OPTIONS = [
+  "bloc rapports",
+  "bloc mails et réponses",
+  "bloc appels",
+  "bloc consultations",
+  "bloc administratif",
+  "bloc organisation",
+  "bloc lecture / préparation",
+  "bloc facturation",
+  "bloc clôture dossiers",
+  "bloc préadmissions sevrage",
+  "journée psychiatre mixte",
+  "demi-journée légère",
+  "demi-journée lourde"
+];
 
-  renderTokens("planChoices", OPTIONS.planChoices, "planChoices");
+export const DAILY_GOAL_OPTIONS = ["non commencé", "en cours", "objectif atteint"];
+export const HISTORY_VIEW_OPTIONS = ["semaine passée", "semaine à venir", "mois", "historique libre"];
+export const PATIENT_CHECKLIST_OPTIONS = [
+  "patient vu",
+  "note faite",
+  "traitement adapté",
+  "communication réseau",
+  "contact assistante sociale",
+  "courrier envoyé",
+  "dossier fermé"
+];
 
-  renderTokens("mseModeChoices", OPTIONS.mseModeChoices, "mseModeChoices", true);
-  renderTokens("mseOrientationChoices", OPTIONS.mseOrientationChoices, "mseOrientationChoices");
-  renderTokens("mseContactChoices", OPTIONS.mseContactChoices, "mseContactChoices");
-  renderTokens("msePresentationChoices", OPTIONS.msePresentationChoices, "msePresentationChoices");
-  renderTokens("mseCollaborationChoices", OPTIONS.mseCollaborationChoices, "mseCollaborationChoices");
-  renderTokens("msePsychomotorChoices", OPTIONS.msePsychomotorChoices, "msePsychomotorChoices");
-  renderTokens("mseMoodChoices", OPTIONS.mseMoodChoices, "mseMoodChoices");
-  renderTokens("mseAnxietyChoices", OPTIONS.mseAnxietyChoices, "mseAnxietyChoices");
-  renderTokens("mseThoughtChoices", OPTIONS.mseThoughtChoices, "mseThoughtChoices");
-  renderTokens("mseTraumaChoices", OPTIONS.mseTraumaChoices, "mseTraumaChoices");
-  renderTokens("riskIdeasChoices", OPTIONS.riskIdeasChoices, "riskIdeasChoices", true);
-  renderTokens("riskAttemptChoices", OPTIONS.riskAttemptChoices, "riskAttemptChoices");
-  renderTokens("mseBehaviorChoices", OPTIONS.mseBehaviorChoices, "mseBehaviorChoices");
-  renderTokens("mseSleepChoices", OPTIONS.mseSleepChoices, "mseSleepChoices");
-  renderTokens("mseFoodChoices", OPTIONS.mseFoodChoices, "mseFoodChoices");
+export const HABIT_OPTIONS = [
+  "sport",
+  "batterie",
+  "guitare",
+  "lecture",
+  "2L eau",
+  "marche",
+  "coucher tôt",
+  "article",
+  "prière"
+];
 
-  renderTokens("careTypeChoices", OPTIONS.careTypeChoices, "careTypeChoices");
-  renderTokens("medicationPresenceChoices", OPTIONS.medicationPresenceChoices, "medicationPresenceChoices");
-  renderTokens("medClassChoices", OPTIONS.medClassChoices, "medClassChoices");
-  renderTokens("medMoleculeChoices", OPTIONS.medMoleculeChoices, "medMoleculeChoices");
+export const GENDER_OPTIONS = ["femme", "homme"];
+export const CIVILITY_OPTIONS = ["auto", "madame", "monsieur"];
 
-  renderTokens("psyWorkChoices", OPTIONS.psyWorkChoices, "psyWorkChoices");
-  renderTokens("psyIncomeChoices", OPTIONS.psyIncomeChoices, "psyIncomeChoices");
-  renderTokens("psyFamilyChoices", OPTIONS.psyFamilyChoices, "psyFamilyChoices");
-  renderTokens("psyHousingChoices", OPTIONS.psyHousingChoices, "psyHousingChoices");
+export const MSE_MODE_OPTIONS = ["rapide", "court", "long", "élaboré"];
+export const MSE_PRESET_OPTIONS = [
+  "anxieux",
+  "anxio-dépressif",
+  "dépressif",
+  "sevrage alcool",
+  "labilité émotionnelle",
+  "maniaque",
+  "psychotique",
+  "fragilité borderline",
+  "trauma / hypervigilance"
+];
 
-  renderTokens("alcTypeChoices", OPTIONS.alcTypeChoices, "alcTypeChoices");
-  renderTokens("alcPatternChoices", OPTIONS.alcPatternChoices, "alcPatternChoices");
-  renderTokens("alcFunctionChoices", OPTIONS.alcFunctionChoices, "alcFunctionChoices");
-  renderTokens("alcDependenceChoices", OPTIONS.alcDependenceChoices, "alcDependenceChoices");
-  renderTokens("alcWithdrawalChoices", OPTIONS.alcWithdrawalChoices, "alcWithdrawalChoices");
+export const MSE_QUICK_OPTIONS = [
+  "bien orienté",
+  "contact adéquat",
+  "discours cohérent",
+  "pensée organisée",
+  "sans psychose manifeste",
+  "sans ralentissement psychomoteur",
+  "pas d’élément maniaque franc"
+];
 
-  renderTokens("otherSubstanceChoices", OPTIONS.otherSubstanceChoices, "otherSubstanceChoices");
-  renderTokens("otherSubstanceFunctionChoices", OPTIONS.otherSubstanceFunctionChoices, "otherSubstanceFunctionChoices");
+export const MSE_ORIENTATION_OPTIONS = [
+  "bien orienté dans le temps et l’espace",
+  "partiellement désorienté",
+  "désorienté"
+];
 
-  $("presetWrap").innerHTML = OPTIONS.presets.map(p => `<button class="token" type="button" data-preset="${p}">${p}</button>`).join("");
+export const MSE_CONTACT_OPTIONS = [
+  "contact adéquat",
+  "contact distant",
+  "contact méfiant",
+  "contact fuyant",
+  "contact familier",
+  "contact engageant",
+  "contact pauvre"
+];
 
-  applyFont();
-  computeWarnings();
-}
+export const MSE_PRESENTATION_OPTIONS = [
+  "présentation soignée",
+  "présentation correcte",
+  "présentation négligée"
+];
 
-function applyFont(){
-  document.body.classList.remove("font-inter", "font-mono", "font-serif");
-  document.body.classList.add(`font-${state.font}`);
-}
+export const MSE_COLLABORATION_OPTIONS = [
+  "bonne collaboration",
+  "collaboration partielle",
+  "collaboration limitée"
+];
 
-function closeMenus(){
-  document.querySelectorAll(".menu").forEach(m => m.classList.add("hidden"));
-}
+export const MSE_PSYCHOMOTOR_OPTIONS = [
+  "absence de ralentissement psychomoteur",
+  "ralentissement psychomoteur",
+  "agitation psychomotrice"
+];
 
-function positionMenu(menu, button){
-  const rect = button.getBoundingClientRect();
-  menu.style.left = `${Math.max(10, rect.left)}px`;
-}
+export const MSE_MOOD_OPTIONS = [
+  "humeur triste",
+  "humeur anxieuse",
+  "humeur irritable",
+  "labilité émotionnelle",
+  "humeur stable",
+  "humeur abaissée",
+  "humeur dysphorique",
+  "humeur fragile"
+];
 
-function toggleMenu(menuId, button){
-  const menu = $(menuId);
-  const opening = menu.classList.contains("hidden");
-  closeMenus();
-  if(opening){
-    positionMenu(menu, button);
-    menu.classList.remove("hidden");
-  }
-}
+export const MSE_ANXIETY_OPTIONS = [
+  "anxiété diffuse",
+  "ruminations",
+  "attaque de panique",
+  "tension interne",
+  "angoisse majeure",
+  "anxiété anticipatoire",
+  "hypervigilance"
+];
 
-function updateTokenState(key, value, single){
-  if(single){
-    state.selected[key] = value;
-    if(key === "gender") state.gender = value;
-    if(key === "civility") state.civility = value;
-  } else {
-    const arr = state.selected[key] || [];
-    const i = arr.indexOf(value);
-    if(i >= 0) arr.splice(i, 1);
-    else arr.push(value);
-    state.selected[key] = arr;
-  }
-  renderUI();
-  regenerate();
-}
+export const MSE_THOUGHT_OPTIONS = [
+  "pensée organisée",
+  "pensée ralentie",
+  "pensée ruminative",
+  "pensée diffluente",
+  "pensée délirante",
+  "discours cohérent",
+  "sans désorganisation",
+  "centrée sur les difficultés actuelles"
+];
 
-function updateMenuState(key, value){
-  state[key] = value;
-  if(key === "type"){
-    state.subType = OPTIONS.subTypes[state.type][0];
-  }
-  renderUI();
-  regenerate();
-}
+export const MSE_TRAUMA_OPTIONS = [
+  "hypervigilance",
+  "reviviscences",
+  "évitement",
+  "pas d’élément traumatique mis en avant"
+];
 
-function inferDSM(){
-  const dx = [];
-  const hasDep = state.selected.mutDxChoices.some(x =>
-    x.includes("dépress") || x.includes("anxio-dépress")
-  ) || cleanText($("mutDxFree").value).toLowerCase().includes("dépress");
+export const RISK_IDEA_OPTIONS = ["absence", "passives", "actives"];
+export const RISK_ATTEMPT_OPTIONS = [
+  "pas d’antécédent de passage à l’acte",
+  "antécédent(s) de passage à l’acte"
+];
 
-  const hasAnx = state.selected.mutDxChoices.some(x =>
-    x.includes("anxieux") || x.includes("anxio")
-  );
+export const MSE_BEHAVIOR_OPTIONS = [
+  "comportement adapté",
+  "attitude agitée",
+  "attitude ralentie",
+  "attitude évitante",
+  "attitude hostile",
+  "attitude impulsive",
+  "contenu",
+  "coopérant"
+];
 
-  const hasAlcohol = cleanText($("alcQty").value) || state.selected.alcDependenceChoices.length;
+export const MSE_SLEEP_OPTIONS = [
+  "insomnie",
+  "réveils nocturnes",
+  "hypersomnie",
+  "sommeil non réparateur",
+  "sommeil normal",
+  "endormissement difficile",
+  "cauchemars"
+];
 
-  if(hasDep && hasAnx){
-    dx.push("Symptomatologie anxio-dépressive persistante");
-  } else if(hasDep){
-    dx.push("Trouble dépressif caractérisé / dépression chronique probable");
-  } else if(hasAnx){
-    dx.push("Trouble anxieux probable");
-  }
+export const MSE_FOOD_OPTIONS = [
+  "alimentation normale",
+  "diminution de l’appétit",
+  "augmentation de l’appétit",
+  "alimentation irrégulière",
+  "appétit diminué",
+  "appétit conservé"
+];
 
-  if(hasAlcohol){
-    dx.push("Trouble lié à l’usage d’alcool à considérer");
-  }
+export const CARE_TYPE_OPTIONS = [
+  "suivi psychiatrique régulier",
+  "psychothérapie",
+  "prise en charge pluridisciplinaire",
+  "centre de jour",
+  "accompagnement ambulatoire",
+  "coordination avec le réseau"
+];
 
-  if(!dx.length){
-    dx.push("Éléments cliniques à préciser");
-  }
+export const MEDICATION_PRESENCE_OPTIONS = [
+  "sans traitement médicamenteux",
+  "avec traitement médicamenteux en cours",
+  "adaptation thérapeutique en cours",
+  "traitement proposé",
+  "switch en cours"
+];
 
-  return dx.join(" ; ");
-}
+export const MED_CLASS_OPTIONS = [
+  "ISRS",
+  "IRSNa",
+  "mirtazapine / autres antidépresseurs",
+  "trazodone",
+  "antipsychotique atypique",
+  "antipsychotique typique",
+  "benzodiazépine",
+  "hypnotique",
+  "thymorégulateur"
+];
 
-function suggestMedication(){
-  const recos = [];
-  const medPresent = state.selected.medicationPresenceChoices.includes("avec traitement médicamenteux en cours");
-  const dx = [...state.selected.mutDxChoices, cleanText($("mutDxFree").value)].join(" ").toLowerCase();
+export const MED_MOLECULE_OPTIONS = [
+  "sertraline",
+  "escitalopram",
+  "fluoxétine",
+  "venlafaxine",
+  "duloxétine",
+  "mirtazapine",
+  "trazodone",
+  "aripiprazole",
+  "quétiapine",
+  "olanzapine",
+  "rispéridone",
+  "halopéridol",
+  "lorazépam",
+  "diazépam",
+  "lormétazépam"
+];
 
-  if(dx.includes("dépress") || dx.includes("anxio-dépress")){
-    recos.push("ISRS en première intention selon tolérance et antécédents");
-  }
+export const MED_TIMING_OPTIONS = [
+  "matin",
+  "midi",
+  "18h",
+  "soir",
+  "22h",
+  "si besoin",
+  "ponctuel",
+  "continu"
+];
 
-  if(dx.includes("anxieux")){
-    recos.push("approche non pharmacologique et/ou antidépresseur si persistance");
-  }
+export const SWITCH_PRESET_OPTIONS = [
+  "sertraline → fluoxétine",
+  "sertraline → escitalopram",
+  "venlafaxine → fluoxétine",
+  "venlafaxine → escitalopram",
+  "mirtazapine → ISRS",
+  "switch libre"
+];
 
-  if(state.selected.mseSleepChoices.some(x => x.includes("insomnie") || x.includes("sommeil non réparateur"))){
-    recos.push("molécule à visée hypnotique possible selon le contexte");
-  }
+export const PSY_WORK_OPTIONS = [
+  "travail",
+  "chômage",
+  "mutuelle",
+  "études",
+  "incapacité",
+  "sans activité",
+  "arrêt de travail"
+];
 
-  if(cleanText($("alcQty").value)){
-    recos.push("prudence avec les benzodiazépines hors cadre de sevrage structuré");
-  }
+export const PSY_INCOME_OPTIONS = [
+  "salaire",
+  "mutuelle",
+  "chômage",
+  "CPAS",
+  "revenus à préciser"
+];
 
-  if(medPresent && !recos.length){
-    recos.push("traitement en cours à poursuivre et réévaluer cliniquement");
-  }
+export const PSY_FAMILY_OPTIONS = [
+  "vit seul",
+  "vit en couple",
+  "soutien familial",
+  "conflits familiaux",
+  "enfants à charge",
+  "réseau limité"
+];
 
-  return recos;
-}
+export const PSY_HOUSING_OPTIONS = [
+  "seul",
+  "en couple",
+  "chez les parents",
+  "logement instable",
+  "hébergé",
+  "institution",
+  "sans domicile fixe"
+];
 
-function buildPsychosocialText(){
-  const chunks = [];
+export const PSY_NETWORK_OPTIONS = [
+  "bon",
+  "limité",
+  "isolé",
+  "soutien familial",
+  "réseau conflictuel",
+  "réseau ambulatoire présent"
+];
 
-  if(state.selected.psyWorkChoices.length) chunks.push(`situation professionnelle : ${joinClinical(state.selected.psyWorkChoices)}`);
-  if(state.selected.psyIncomeChoices.length) chunks.push(`revenus : ${joinClinical(state.selected.psyIncomeChoices)}`);
-  if(state.selected.psyFamilyChoices.length) chunks.push(`situation familiale : ${joinClinical(state.selected.psyFamilyChoices)}`);
-  if(cleanText($("psyChildren").value)) chunks.push(`enfants : ${cleanText($("psyChildren").value)}`);
-  if(state.selected.psyHousingChoices.length) chunks.push(`logement : ${joinClinical(state.selected.psyHousingChoices)}`);
-  if(cleanText($("psyFree").value)) chunks.push(cleanText($("psyFree").value));
+export const PSY_STRESS_OPTIONS = [
+  "financier",
+  "familial",
+  "professionnel",
+  "isolement",
+  "rupture",
+  "judiciaire",
+  "logement",
+  "précarité",
+  "charge mentale"
+];
 
-  return chunks.length ? cap(chunks.join(", ")) + "." : "";
-}
+export const RISK_QUICK_OPTIONS = [
+  "idées noires",
+  "scénario",
+  "intentionnalité",
+  "moyens disponibles",
+  "ATCD passage à l’acte",
+  "facteurs de protection",
+  "impulsivité",
+  "ambivalence"
+];
 
-function buildMSEText(){
-  const g = genderPack();
-  const s = state.selected;
-  const longMode = s.mseModeChoices !== "rapide";
+export const RISK_IDEA_DETAILED_OPTIONS = ["absence", "passives", "actives"];
+export const RISK_SEVERITY_OPTIONS = ["faible", "modéré", "élevé"];
+export const RISK_PROTECTION_OPTIONS = [
+  "famille",
+  "enfants",
+  "suivi médical",
+  "demande d’aide",
+  "projet futur",
+  "foi",
+  "animal de compagnie",
+  "alliance thérapeutique"
+];
 
-  if(!longMode){
-    const bits = [];
-    if(s.mseOrientationChoices.length) bits.push(joinClinical(s.mseOrientationChoices));
-    if(s.mseContactChoices.length) bits.push(joinClinical(s.mseContactChoices));
-    if(s.mseMoodChoices.length) bits.push(joinClinical(s.mseMoodChoices));
-    if(s.mseAnxietyChoices.length) bits.push(joinClinical(s.mseAnxietyChoices));
-    if(s.mseThoughtChoices.length) bits.push(joinClinical(s.mseThoughtChoices));
-    if(s.mseSleepChoices.length) bits.push(joinClinical(s.mseSleepChoices));
-    if(s.mseFoodChoices.length) bits.push(joinClinical(s.mseFoodChoices));
-    return bits.length ? cap(bits.join(", ")) + "." : `${g.Patient} bien ${g.orienté} dans le temps et l’espace, contact adéquat.`;
-  }
+export const ALCOHOL_TYPE_OPTIONS = [
+  "bière",
+  "vin",
+  "alcool fort",
+  "mixte",
+  "apéritifs",
+  "spiritueux"
+];
 
-  let txt = "";
+export const ALCOHOL_PATTERN_OPTIONS = [
+  "quotidien",
+  "binge",
+  "épisodique",
+  "fluctuant",
+  "majoré le soir",
+  "majoré le week-end",
+  "avec consommation matinale"
+];
 
-  txt += s.mseOrientationChoices.length
-    ? `${cap(joinClinical(s.mseOrientationChoices))}, `
-    : `${g.Patient} bien ${g.orienté} dans le temps et l’espace, `;
+export const ALCOHOL_FUNCTION_OPTIONS = [
+  "anxiolytique",
+  "aide au sommeil",
+  "socialisation",
+  "gestion émotion",
+  "solitude",
+  "ennui",
+  "habitude",
+  "impulsivité",
+  "couper les pensées",
+  "désinhibition",
+  "automédication"
+];
 
-  txt += s.mseContactChoices.length
-    ? `${joinClinical(s.mseContactChoices)}, `
-    : "contact adéquat, ";
+export const ALCOHOL_DEPENDENCE_OPTIONS = [
+  "craving",
+  "perte de contrôle",
+  "tolérance",
+  "consommation matinale",
+  "symptômes de sevrage",
+  "retentissement social",
+  "retentissement professionnel",
+  "tentatives d’arrêt infructueuses",
+  "augmentation progressive des quantités"
+];
 
-  txt += s.msePresentationChoices.length
-    ? `${joinClinical(s.msePresentationChoices)}, `
-    : "présentation correcte, ";
+export const ALCOHOL_WITHDRAWAL_OPTIONS = [
+  "ambulatoire",
+  "hospitalier",
+  "DT",
+  "convulsions",
+  "échec de sevrage antérieur",
+  "aucun antécédent de sevrage",
+  "sevrage compliqué",
+  "sevrage simple"
+];
 
-  txt += s.mseCollaborationChoices.length
-    ? `${joinClinical(s.mseCollaborationChoices)}. `
-    : "bonne collaboration. ";
+export const OTHER_SUBSTANCE_OPTIONS = [
+  "cannabis",
+  "cocaïne",
+  "benzodiazépines",
+  "opiacés",
+  "amphétamines",
+  "MDMA",
+  "tabac",
+  "kétamine",
+  "médicaments détournés"
+];
 
-  txt += s.msePsychomotorChoices.length
-    ? `${cap(joinClinical(s.msePsychomotorChoices))}. `
-    : "Absence de ralentissement psychomoteur. ";
+export const OTHER_SUBSTANCE_FUNCTION_OPTIONS = [
+  "anxiolytique",
+  "stimulation",
+  "désinhibition",
+  "sommeil",
+  "habitude",
+  "gestion émotion",
+  "socialisation",
+  "automédication"
+];
 
-  const middle = [];
-  if(s.mseMoodChoices.length) middle.push(joinClinical(s.mseMoodChoices));
-  if(s.mseAnxietyChoices.length) middle.push(joinClinical(s.mseAnxietyChoices));
-  if(s.mseThoughtChoices.length) middle.push(joinClinical(s.mseThoughtChoices));
-  if(s.mseTraumaChoices.length) middle.push(joinClinical(s.mseTraumaChoices));
-  if(middle.length) txt += `${cap(joinClinical(middle))}. `;
+export const WITHDRAW_ORDER_OPTIONS = [
+  "18h → midi → soir → matin",
+  "18h → midi → matin → soir",
+  "ordre standard"
+];
 
-  if(state.selected.riskIdeasChoices){
-    if(state.selected.riskIdeasChoices === "absence"){
-      txt += "Absence d’idées noires rapportée. ";
-    } else if(state.selected.riskIdeasChoices === "passives"){
-      txt += "Présence d’idées noires passives. ";
-    } else {
-      txt += "Présence d’idées suicidaires actives. ";
+export const MAIL_FREQUENT_TYPE_OPTIONS = [
+  "réponse courte",
+  "transmission clinique",
+  "report de rendez-vous",
+  "confirmation",
+  "envoi de document",
+  "relance",
+  "réponse à absence",
+  "demande d’informations"
+];
+
+export const TODO_VIEW_OPTIONS = [
+  "panneau réel",
+  "liste simple",
+  "par demi-journée",
+  "par bloc"
+];
+
+/**
+ * Définition centrale des groupes de sélection.
+ * - id = id HTML du conteneur
+ * - key = clé dans state.selected
+ * - single = vrai si choix unique
+ * - direct = clé d’état directe si on ne veut pas passer par selected
+ */
+export const TOKEN_GROUPS = [
+  { id: "docVersionChoices", key: "docVersion", single: true, options: DOC_VERSION_OPTIONS },
+
+  { id: "structurePresetChoices", key: "structurePreset", single: false, options: STRUCTURE_PRESET_OPTIONS },
+  { id: "writingBlockChoices", key: "writingBlock", single: false, options: WRITING_BLOCK_OPTIONS },
+  { id: "writingPhraseChoices", key: "writingPhrase", single: false, options: WRITING_PHRASE_OPTIONS },
+
+  { id: "hospitalWeek1Choices", key: "hospitalWeek1", single: false, options: HOSPITAL_WEEK1_OPTIONS },
+  { id: "hospitalWeek2Choices", key: "hospitalWeek2", single: false, options: HOSPITAL_WEEK2_OPTIONS },
+  { id: "hospitalEvolutionChoices", key: "hospitalEvolution", single: false, options: HOSPITAL_EVOLUTION_OPTIONS },
+
+  { id: "administrativeQuickChoices", key: "administrativeQuick", single: false, options: ADMINISTRATIVE_QUICK_OPTIONS },
+  { id: "letterQuickChoices", key: "letterQuick", single: false, options: LETTER_QUICK_OPTIONS },
+  { id: "toneQuickChoices", key: "toneQuick", single: false, options: TONE_QUICK_OPTIONS },
+  { id: "smartPresetChoices", key: "smartPreset", single: false, options: SMART_PRESET_OPTIONS },
+
+  { id: "planningVisualChoices", key: "planningVisual", single: true, options: PLANNING_VISUAL_OPTIONS },
+  { id: "dayTemplateChoices", key: "dayTemplate", single: true, options: DAY_TEMPLATE_OPTIONS },
+  { id: "timeBlockChoices", key: "timeBlock", single: true, options: TIME_BLOCK_OPTIONS },
+  { id: "halfDayChoices", key: "halfDay", single: false, options: HALF_DAY_OPTIONS },
+
+  { id: "taskTypeChoices", key: "taskType", single: false, options: TASK_TYPE_OPTIONS },
+  { id: "taskPriorityChoices", key: "taskPriority", single: true, options: TASK_PRIORITY_OPTIONS },
+  { id: "taskEnergyChoices", key: "taskEnergy", single: true, options: TASK_ENERGY_OPTIONS },
+  { id: "todoSetChoices", key: "todoSet", single: false, options: TODO_SET_OPTIONS },
+  { id: "dailyGoalChoices", key: "dailyGoalStatus", single: true, options: DAILY_GOAL_OPTIONS },
+  { id: "historyViewChoices", key: "historyView", single: true, options: HISTORY_VIEW_OPTIONS },
+  { id: "patientChecklistChoices", key: "patientChecklist", single: false, options: PATIENT_CHECKLIST_OPTIONS },
+  { id: "habitChoices", key: "habitChoices", single: false, options: HABIT_OPTIONS },
+
+  { id: "genderChoices", key: "gender", single: true, direct: "gender", options: GENDER_OPTIONS },
+  { id: "civilityChoices", key: "civility", single: true, direct: "civility", options: CIVILITY_OPTIONS },
+
+  { id: "themeModeChoices", key: "theme", single: true, direct: "theme", options: APPEARANCE_OPTIONS.themeModeChoices },
+  { id: "seasonChoices", key: "season", single: true, direct: "season", options: APPEARANCE_OPTIONS.seasonChoices },
+  { id: "fontChoices", key: "font", single: true, direct: "font", options: APPEARANCE_OPTIONS.fontChoices },
+  { id: "transparencyChoices", key: "transparency", single: true, direct: "transparency", options: APPEARANCE_OPTIONS.transparencyChoices },
+  { id: "shadowChoices", key: "shadowMode", single: true, direct: "shadowMode", options: APPEARANCE_OPTIONS.shadowChoices },
+
+  { id: "mainFrequentMotiveChoices", key: "mainFrequentMotive", single: false, options: MAIN_FREQUENT_MOTIVES },
+  { id: "mainFrequentSymptomChoices", key: "mainFrequentSymptom", single: false, options: MAIN_FREQUENT_SYMPTOMS },
+  { id: "mainFrequentPlanChoices", key: "mainFrequentPlan", single: false, options: MAIN_FREQUENT_PLANS },
+  { id: "alcoholFunctionQuickChoices", key: "alcoholFunctionQuick", single: false, options: ALCOHOL_FUNCTION_QUICK },
+
+  { id: "mseModeChoices", key: "mseMode", single: true, options: MSE_MODE_OPTIONS },
+  { id: "msePresetChoices", key: "msePreset", single: true, options: MSE_PRESET_OPTIONS },
+  { id: "mseQuickChoices", key: "mseQuick", single: false, options: MSE_QUICK_OPTIONS },
+
+  { id: "mseOrientationChoices", key: "mseOrientation", single: false, options: MSE_ORIENTATION_OPTIONS },
+  { id: "mseContactChoices", key: "mseContact", single: false, options: MSE_CONTACT_OPTIONS },
+  { id: "msePresentationChoices", key: "msePresentation", single: false, options: MSE_PRESENTATION_OPTIONS },
+  { id: "mseCollaborationChoices", key: "mseCollaboration", single: false, options: MSE_COLLABORATION_OPTIONS },
+  { id: "msePsychomotorChoices", key: "msePsychomotor", single: false, options: MSE_PSYCHOMOTOR_OPTIONS },
+  { id: "mseMoodChoices", key: "mseMood", single: false, options: MSE_MOOD_OPTIONS },
+  { id: "mseAnxietyChoices", key: "mseAnxiety", single: false, options: MSE_ANXIETY_OPTIONS },
+  { id: "mseThoughtChoices", key: "mseThought", single: false, options: MSE_THOUGHT_OPTIONS },
+  { id: "mseTraumaChoices", key: "mseTrauma", single: false, options: MSE_TRAUMA_OPTIONS },
+  { id: "riskIdeasChoices", key: "riskIdeas", single: true, options: RISK_IDEA_OPTIONS },
+  { id: "riskAttemptChoices", key: "riskAttempt", single: false, options: RISK_ATTEMPT_OPTIONS },
+  { id: "mseBehaviorChoices", key: "mseBehavior", single: false, options: MSE_BEHAVIOR_OPTIONS },
+  { id: "mseSleepChoices", key: "mseSleep", single: false, options: MSE_SLEEP_OPTIONS },
+  { id: "mseFoodChoices", key: "mseFood", single: false, options: MSE_FOOD_OPTIONS },
+
+  { id: "careTypeChoices", key: "careType", single: false, options: CARE_TYPE_OPTIONS },
+  { id: "medicationPresenceChoices", key: "medicationPresence", single: true, options: MEDICATION_PRESENCE_OPTIONS },
+  { id: "medClassChoices", key: "medClass", single: false, options: MED_CLASS_OPTIONS },
+  { id: "medMoleculeChoices", key: "medMolecule", single: false, options: MED_MOLECULE_OPTIONS },
+  { id: "medTimingChoices", key: "medTiming", single: false, options: MED_TIMING_OPTIONS },
+  { id: "switchPresetChoices", key: "switchPreset", single: true, options: SWITCH_PRESET_OPTIONS },
+
+  { id: "psyWorkChoices", key: "psyWork", single: false, options: PSY_WORK_OPTIONS },
+  { id: "psyIncomeChoices", key: "psyIncome", single: false, options: PSY_INCOME_OPTIONS },
+  { id: "psyFamilyChoices", key: "psyFamily", single: false, options: PSY_FAMILY_OPTIONS },
+  { id: "psyHousingChoices", key: "psyHousing", single: false, options: PSY_HOUSING_OPTIONS },
+  { id: "psyNetworkChoices", key: "psyNetwork", single: false, options: PSY_NETWORK_OPTIONS },
+  { id: "psyStressChoices", key: "psyStress", single: false, options: PSY_STRESS_OPTIONS },
+
+  { id: "riskQuickChoices", key: "riskQuick", single: false, options: RISK_QUICK_OPTIONS },
+  { id: "riskIdeasDetailedChoices", key: "riskIdeasDetailed", single: true, options: RISK_IDEA_DETAILED_OPTIONS },
+  { id: "riskSeverityChoices", key: "riskSeverity", single: true, options: RISK_SEVERITY_OPTIONS },
+  { id: "riskProtectionChoices", key: "riskProtection", single: false, options: RISK_PROTECTION_OPTIONS },
+
+  { id: "alcTypeChoices", key: "alcType", single: false, options: ALCOHOL_TYPE_OPTIONS },
+  { id: "alcPatternChoices", key: "alcPattern", single: false, options: ALCOHOL_PATTERN_OPTIONS },
+  { id: "alcFunctionChoices", key: "alcFunction", single: false, options: ALCOHOL_FUNCTION_OPTIONS },
+  { id: "alcDependenceChoices", key: "alcDependence", single: false, options: ALCOHOL_DEPENDENCE_OPTIONS },
+  { id: "alcWithdrawalChoices", key: "alcWithdrawal", single: false, options: ALCOHOL_WITHDRAWAL_OPTIONS },
+
+  { id: "otherSubstanceChoices", key: "otherSubstance", single: false, options: OTHER_SUBSTANCE_OPTIONS },
+  { id: "otherSubstanceFunctionChoices", key: "otherSubstanceFunction", single: false, options: OTHER_SUBSTANCE_FUNCTION_OPTIONS },
+
+  { id: "withdrawOrderChoices", key: "withdrawOrder", single: true, options: WITHDRAW_ORDER_OPTIONS },
+
+  { id: "mailFrequentTypeChoices", key: "mailFrequentType", single: false, options: MAIL_FREQUENT_TYPE_OPTIONS },
+  { id: "todoViewChoices", key: "todoView", single: true, options: TODO_VIEW_OPTIONS }
+];
+
+/**
+ * HTML IDs de champs libres / inputs à sérialiser.
+ * On garde ici tout ce qui sera relu par l’état et les générateurs.
+ */
+export const SERIALIZED_FIELD_IDS = [
+  "docDate",
+  "mainReason",
+  "mainContext",
+  "mainPlan",
+
+  "taskInbox",
+  "taskDurationEstimate",
+  "taskNotesFree",
+  "dailyClosingGoal",
+  "dailyReportGoal",
+  "dailyGoalNotes",
+  "historyNotes",
+  "patientListInput",
+  "patientBlockNotes",
+  "weekLabel",
+  "dayLabel",
+  "planningNotes",
+  "habitNotes",
+
+  "mseOrientationFree",
+  "msePresentationFree",
+  "mseCollaborationFree",
+  "msePsychomotorFree",
+  "mseDiscourseFree",
+  "mseRealityFree",
+  "msePerceptionFree",
+  "mseAnhedoniaFree",
+  "mseTraumaFree",
+  "mseInsightFree",
+  "mseFree",
+
+  "medDose",
+  "treatment",
+
+  "psyChildren",
+  "psyAcademic",
+  "psyFamilyText",
+  "psyContextBrief",
+  "psyFree",
+
+  "pastPsychiatric",
+  "pastSomatic",
+  "pastAddictology",
+  "pastFamilyPsychiatric",
+
+  "riskScenario",
+  "riskAttemptsFree",
+
+  "alcQty",
+  "alcLast",
+  "alcStart",
+  "alcCharacter",
+  "alcVolume",
+  "alcDegrees",
+  "alcFree",
+  "otherSubstances",
+
+  "withdrawDrug",
+  "withdrawPattern",
+  "withdrawDose",
+  "withdrawDays",
+  "withdrawStartDate",
+  "withdrawOutput",
+
+  "letterRecipient",
+  "letterSubject",
+  "mailFormality",
+  "mailContext",
+  "mailActionGoal",
+  "mailMainContent"
+];
+
+/**
+ * Presets :
+ * on applique ensuite ces patches dans le state et/ou dans les champs.
+ */
+export const PRESET_PATCHES = {
+  "rapport mutuelle anxio-dépressif": {
+    state: {
+      type: "administratif",
+      subType: "rapport mutuelle",
+      gender: "femme"
+    },
+    selected: {
+      mseMode: "long",
+      msePreset: "anxio-dépressif",
+      mseOrientation: ["bien orienté dans le temps et l’espace"],
+      mseContact: ["contact adéquat"],
+      msePresentation: ["présentation correcte"],
+      mseCollaboration: ["bonne collaboration"],
+      msePsychomotor: ["absence de ralentissement psychomoteur"],
+      mseMood: ["humeur triste", "humeur fragile"],
+      mseAnxiety: ["anxiété diffuse", "ruminations"],
+      mseThought: ["discours cohérent", "pensée organisée", "centrée sur les difficultés actuelles"],
+      mseBehavior: ["comportement adapté"],
+      mseSleep: ["insomnie", "sommeil non réparateur"],
+      mseFood: ["appétit conservé"],
+      careType: ["suivi psychiatrique régulier", "psychothérapie"],
+      medicationPresence: "avec traitement médicamenteux en cours",
+      mainFrequentMotive: ["anxiété", "humeur dépressive", "retentissement fonctionnel important"],
+      mainFrequentSymptom: ["ruminations", "anhédonie", "fatigabilité", "troubles du sommeil"],
+      mainFrequentPlan: ["poursuite du suivi psychiatrique", "adaptation thérapeutique", "soutien ambulatoire"]
+    },
+    fields: {
+      mainReason: "Suivi dans un contexte de symptomatologie anxio-dépressive persistante.",
+      mainContext: "Le tableau s’inscrit dans une évolution prolongée avec retentissement fonctionnel important.",
+      mainPlan: "Poursuite du suivi, réévaluation clinique régulière et adaptation thérapeutique selon l’évolution."
+    }
+  },
+
+  "rapport mutuelle dépression chronique": {
+    state: {
+      type: "administratif",
+      subType: "rapport mutuelle"
+    },
+    selected: {
+      mseMood: ["humeur triste", "humeur abaissée"],
+      mseAnxiety: ["ruminations"],
+      mseSleep: ["insomnie"],
+      mainFrequentSymptom: ["anhédonie", "baisse de l’élan", "fatigabilité", "difficultés de concentration"]
+    },
+    fields: {
+      mainReason: "Suivi dans un contexte de dépression chronique.",
+      mainContext: "Persistance de symptômes dépressifs avec amélioration partielle seulement."
+    }
+  },
+
+  "consultation suivi anxio-dépressif": {
+    state: {
+      type: "consultation",
+      subType: "suivi"
+    },
+    selected: {
+      msePreset: "anxio-dépressif",
+      mseMood: ["humeur triste"],
+      mseAnxiety: ["anxiété diffuse", "ruminations"],
+      mseSleep: ["insomnie"],
+      careType: ["suivi psychiatrique régulier"]
+    }
+  },
+
+  "urgences crise suicidaire": {
+    state: {
+      type: "urgences",
+      subType: "évaluation urgences"
+    },
+    selected: {
+      riskIdeas: "actives",
+      riskIdeasDetailed: "actives",
+      riskSeverity: "élevé",
+      mseMood: ["humeur triste"],
+      mseAnxiety: ["angoisse majeure"],
+      riskQuick: ["idées noires", "intentionnalité", "moyens disponibles"]
+    }
+  },
+
+  "préadmission sevrage alcool": {
+    state: {
+      type: "préadmission",
+      subType: "évaluation de préadmission"
+    },
+    selected: {
+      alcType: ["mixte"],
+      alcPattern: ["quotidien"],
+      alcWithdrawal: ["hospitalier", "sevrage simple"]
+    },
+    fields: {
+      alcQty: "8 unités / jour"
+    }
+  },
+
+  "hospitalisation semaine 1": {
+    state: {
+      type: "hospitalisation",
+      subType: "admission semaine 1"
+    },
+    selected: {
+      hospitalWeek1: ["motivation", "type de consommation", "histoire de la consommation", "fonction de la consommation", "ATCD psychiatriques", "ATCD de sevrage", "suivi en cours", "examen mental complet"],
+      alcType: ["mixte"],
+      alcPattern: ["quotidien"],
+      msePreset: "sevrage alcool",
+      mseMood: ["humeur fragile"],
+      mseAnxiety: ["anxiété diffuse"],
+      mseSleep: ["insomnie"]
+    }
+  },
+
+  "attestation de présence": {
+    state: {
+      type: "administratif",
+      subType: "attestation de présence"
+    }
+  },
+
+  "mail réponse simple": {
+    state: {
+      type: "mail",
+      subType: "réponse simple"
+    },
+    selected: {
+      mailFrequentType: ["réponse courte"]
+    }
+  },
+
+  "anxio-dépressif": {
+    selected: {
+      msePreset: "anxio-dépressif",
+      mseMood: ["humeur triste", "humeur fragile"],
+      mseAnxiety: ["anxiété diffuse", "ruminations"],
+      mseSleep: ["insomnie"]
+    }
+  },
+
+  "crise suicidaire": {
+    selected: {
+      riskIdeas: "actives",
+      riskIdeasDetailed: "actives",
+      riskSeverity: "élevé",
+      riskQuick: ["idées noires", "scénario", "intentionnalité"]
+    }
+  },
+
+  "sevrage alcool simple": {
+    selected: {
+      alcPattern: ["quotidien"],
+      alcWithdrawal: ["sevrage simple"]
+    }
+  },
+
+  "sevrage alcool compliqué": {
+    selected: {
+      alcPattern: ["quotidien", "avec consommation matinale"],
+      alcWithdrawal: ["sevrage compliqué", "DT", "convulsions"]
+    }
+  },
+
+  "insomnie / anxiété": {
+    selected: {
+      mseAnxiety: ["anxiété diffuse", "tension interne"],
+      mseSleep: ["insomnie", "endormissement difficile"]
+    }
+  },
+
+  "trauma probable": {
+    selected: {
+      mseTrauma: ["hypervigilance", "reviviscences", "évitement"]
     }
   }
+};
 
-  if(s.riskAttemptChoices.length){
-    txt += `${cap(joinClinical(s.riskAttemptChoices))}. `;
+/**
+ * État par défaut.
+ * Les tableaux selected seront remplis automatiquement dans app-state.js
+ */
+export const DEFAULT_STATE = {
+  gender: "femme",
+  civility: "auto",
+
+  type: "hospitalisation",
+  subType: "admission semaine 1",
+  mode: "complet",
+  output: "texte",
+
+  theme: "clair",
+  season: "printemps",
+  font: "inter",
+  transparency: "medium",
+  shadowMode: "on",
+
+  leftPanelWidth: 360,
+  rightPanelWidth: 360,
+
+  leftCollapsed: false,
+  rightCollapsed: false,
+
+  rightView: "todo",
+
+  selected: {},
+  mainDocs: [],
+  letterDocs: [],
+  activeMainDocId: null,
+  activeLetterDocId: null,
+
+  openedWindows: [],
+  taskItems: [],
+  recentDocuments: [],
+  habitTrack: {},
+
+  alcoholUnits: 0,
+  withdrawalPlanText: ""
+};
+
+/**
+ * Génère la structure vide de selected à partir de TOKEN_GROUPS
+ */
+export function buildEmptySelectedState() {
+  const selected = {};
+  for (const group of TOKEN_GROUPS) {
+    if (group.direct) continue;
+    selected[group.key] = group.single ? "" : [];
   }
-
-  txt += s.mseBehaviorChoices.length
-    ? `${cap(joinClinical(s.mseBehaviorChoices))}. `
-    : "Comportement adapté. ";
-
-  txt += s.mseSleepChoices.length
-    ? `${cap(joinClinical(s.mseSleepChoices))}. `
-    : "Sommeil conservé. ";
-
-  txt += s.mseFoodChoices.length
-    ? `${cap(joinClinical(s.mseFoodChoices))}. `
-    : "Alimentation conservée. ";
-
-  if(cleanText($("mseFree").value)){
-    txt += sentence($("mseFree").value);
-  }
-
-  return txt.trim();
+  return selected;
 }
 
-function buildTreatmentText(){
-  const care = state.selected.careTypeChoices;
-  const medPresence = state.selected.medicationPresenceChoices;
-  const medClass = state.selected.medClassChoices;
-  const medMolecules = state.selected.medMoleculeChoices;
-  const medDose = cleanText($("medDose").value);
-  const raw = cleanText($("treatment").value);
-
-  const chunks = [];
-
-  if(care.length){
-    chunks.push(`prise en charge actuelle : ${joinClinical(care)}`);
+/**
+ * Petits helpers de contexte rédactionnel à utiliser côté UI
+ */
+export const CONTEXTUAL_LEFT_PANEL = {
+  consultation: {
+    structures: ["motif + contexte + examen + plan", "intro + clinique + plan"],
+    blocks: ["motif / demande", "contexte / histoire", "examen clinique / mental", "traitement", "plan"],
+    phrases: ["Je vois en consultation de psychiatrie…", "Sur le plan clinique…", "Plan…"]
+  },
+  urgences: {
+    structures: ["motif + examen + risque + décision", "intro + clinique + orientation"],
+    blocks: ["motif / demande", "examen clinique / mental", "risque suicidaire", "conclusion"],
+    phrases: ["Est vu aux urgences pour…", "Risque suicidaire…", "Décision / orientation…"]
+  },
+  hospitalisation: {
+    structures: ["admission complète sevrage", "évolution + examen + traitement + projection"],
+    blocks: ["consommations", "antécédents", "examen clinique / mental", "traitement", "projection / suite"],
+    phrases: ["Évolution générale…", "Dynamique thérapeutique…", "Projection / suite…"]
+  },
+  "préadmission": {
+    structures: ["motif + consommation + examen + indication"],
+    blocks: ["motif / demande", "consommations", "psychosocial", "conclusion"],
+    phrases: ["Évaluation de préadmission…", "Indication…"]
+  },
+  administratif: {
+    structures: ["mutuelle structurée", "intro + clinique + conclusion"],
+    blocks: ["retentissement fonctionnel", "psychosocial", "traitement", "conclusion"],
+    phrases: ["Au début de la prise en charge…", "Actuellement, il persiste…", "Je reste à disposition…"]
+  },
+  mail: {
+    structures: ["mail bref structuré", "objet + contexte + action"],
+    blocks: ["motif / demande", "conclusion"],
+    phrases: ["Bonjour,…", "Je reviens vers vous concernant…", "Bien à vous."]
   }
-
-  if(medPresence.length){
-    chunks.push(joinClinical(medPresence));
-  }
-
-  if(medClass.length){
-    chunks.push(`classe thérapeutique : ${joinClinical(medClass)}`);
-  }
-
-  if(medMolecules.length){
-    let molTxt = `molécule(s) : ${joinClinical(medMolecules)}`;
-    if(medDose) molTxt += ` (${medDose})`;
-    chunks.push(molTxt);
-  }
-
-  if(raw){
-    chunks.push(`traitement résumé : ${raw.replace(/\n/g, "; ")}`);
-  }
-
-  return chunks.length ? cap(chunks.join(". ")) + "." : "";
-}
-
-function buildConsumptionText(){
-  const blocks = [];
-
-  const alcoholParts = [];
-  if(state.selected.alcTypeChoices.length) alcoholParts.push(`type ${joinClinical(state.selected.alcTypeChoices)}`);
-  if(cleanText($("alcQty").value)) alcoholParts.push(`quantité ${cleanText($("alcQty").value)}`);
-  if(state.selected.alcPatternChoices.length) alcoholParts.push(`pattern ${joinClinical(state.selected.alcPatternChoices)}`);
-  if(cleanText($("alcLast").value)) alcoholParts.push(`dernière prise ${cleanText($("alcLast").value)}`);
-  if(cleanText($("alcStart").value)) alcoholParts.push(`début ${cleanText($("alcStart").value)}`);
-  if(cleanText($("alcCharacter").value)) alcoholParts.push(`caractère ${cleanText($("alcCharacter").value)}`);
-  if(state.selected.alcFunctionChoices.length) alcoholParts.push(`fonction ${joinClinical(state.selected.alcFunctionChoices)}`);
-  if(state.selected.alcDependenceChoices.length) alcoholParts.push(`éléments de dépendance : ${joinClinical(state.selected.alcDependenceChoices)}`);
-  if(state.selected.alcWithdrawalChoices.length) alcoholParts.push(`sevrage / ATCD : ${joinClinical(state.selected.alcWithdrawalChoices)}`);
-  if(cleanText($("alcFree").value)) alcoholParts.push(cleanText($("alcFree").value));
-
-  if(alcoholParts.length){
-    blocks.push("Alcool : " + sentence(alcoholParts.join(", ")));
-  }
-
-  const otherParts = [];
-  if(state.selected.otherSubstanceChoices.length) otherParts.push(`substances : ${joinClinical(state.selected.otherSubstanceChoices)}`);
-  if(state.selected.otherSubstanceFunctionChoices.length) otherParts.push(`fonction : ${joinClinical(state.selected.otherSubstanceFunctionChoices)}`);
-  if(cleanText($("otherSubstances").value)) otherParts.push(cleanText($("otherSubstances").value));
-  if(otherParts.length){
-    blocks.push("Autres consommations : " + sentence(otherParts.join(", ")));
-  }
-
-  if(state.withdrawalPlanText){
-    blocks.push("Schéma de sevrage :\n" + state.withdrawalPlanText);
-                       }
+};
