@@ -752,4 +752,4 @@ export function initializeUIModule(doc = document) {
   bindMailHelpers(doc);
 
   renderAllUI(doc);
-}
+      }
