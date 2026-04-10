@@ -1,10 +1,25 @@
-// app-generators.js
-// Génération de textes + point d’entrée applicatif
+// app-generators.js — V8
+// Génération de texte + to do + alcool + sevrage + bootstrap global
 
 import { DOCUMENT_KIND } from "./app-config.js";
-import { state, addTask, toggleTaskDone, removeTask, setAlcoholUnits, setWithdrawalPlanText } from "./app-state.js";
-import { registerDocumentGeneratorCallbacks, setGeneratedContentForActiveEditor, refreshEditorTargetFromState } from "./app-documents.js";
-import { initializeUIModule, renderAllUI } from "./app-ui.js";
+import {
+  state,
+  addTask,
+  toggleTaskDone,
+  removeTask,
+  setAlcoholUnits,
+  setWithdrawalPlanText
+} from "./app-state.js";
+
+import {
+  registerDocumentGeneratorCallbacks,
+  regenerateCurrentDocument,
+  refreshEditorTargetFromState
+} from "./app-documents.js";
+
+import {
+  initializeUIModule
+} from "./app-ui.js";
 
 /* =========================================================
    HELPERS
@@ -46,12 +61,6 @@ function joinClinical(arr) {
   return `${list.slice(0, -1).join(", ")} et ${list[list.length - 1]}`;
 }
 
-function maybeLine(label, value) {
-  const v = (value || "").toString().trim();
-  if (!v) return "";
-  return `${label} ${sentence(v)}`;
-}
-
 function packGender() {
   const male = state.gender === "homme";
   const civility =
@@ -72,20 +81,26 @@ function packGender() {
   };
 }
 
+/* =========================================================
+   DIAGNOSTIC / CONTEXTE / PLAN
+========================================================= */
+
 function currentDiagnosisText(doc = document) {
   const reasons = [];
 
-  if (hasText(text("mainReason", doc))) reasons.push(text("mainReason", doc));
+  if (hasText(text("mainReason", doc))) {
+    reasons.push(text("mainReason", doc));
+  }
 
   const motives = safeArray(state.selected.mainFrequentMotive);
-  if (motives.length) reasons.push(joinClinical(motives));
+  if (motives.length) {
+    reasons.push(joinClinical(motives));
+  }
 
-  const dxLike = [
-    ...safeArray(state.selected.smartPreset),
-    ...safeArray(state.selected.administrativeQuick)
-  ].filter(Boolean);
-
-  if (!reasons.length && dxLike.length) reasons.push(joinClinical(dxLike));
+  const smartPresets = safeArray(state.selected.smartPreset);
+  if (!reasons.length && smartPresets.length) {
+    reasons.push(joinClinical(smartPresets));
+  }
 
   return reasons.length ? reasons[0] : "une symptomatologie à préciser";
 }
@@ -93,7 +108,9 @@ function currentDiagnosisText(doc = document) {
 function mainContextText(doc = document) {
   const chunks = [];
 
-  if (hasText(text("mainContext", doc))) chunks.push(sentence(text("mainContext", doc)));
+  if (hasText(text("mainContext", doc))) {
+    chunks.push(sentence(text("mainContext", doc)));
+  }
 
   const symptoms = safeArray(state.selected.mainFrequentSymptom);
   if (symptoms.length) {
@@ -108,10 +125,12 @@ function mainPlanText(doc = document) {
 
   const plans = safeArray(state.selected.mainFrequentPlan);
   if (plans.length) {
-    chunks.push(`Sur le plan thérapeutique, il est proposé ${joinClinical(plans)}.`);
+    chunks.push(`Il est proposé ${joinClinical(plans)}.`);
   }
 
-  if (hasText(text("mainPlan", doc))) chunks.push(sentence(text("mainPlan", doc)));
+  if (hasText(text("mainPlan", doc))) {
+    chunks.push(sentence(text("mainPlan", doc)));
+  }
 
   return chunks.join(" ");
 }
@@ -208,7 +227,7 @@ function buildExamMental(doc = document) {
   ].filter(Boolean);
 
   if (extras.length) {
-    txt += extras.map(sentence).join(" ") + " ";
+    txt += extras.map(sentence).join(" ");
   }
 
   return txt.trim();
@@ -219,43 +238,43 @@ function buildExamMental(doc = document) {
 ========================================================= */
 
 function buildTreatment(doc = document) {
-  const pieces = [];
+  const chunks = [];
 
   const careType = safeArray(state.selected.careType);
   if (careType.length) {
-    pieces.push(`prise en charge actuelle : ${joinClinical(careType)}`);
+    chunks.push(`prise en charge actuelle : ${joinClinical(careType)}`);
   }
 
   if (state.selected.medicationPresence) {
-    pieces.push(state.selected.medicationPresence);
+    chunks.push(state.selected.medicationPresence);
   }
 
   const medClass = safeArray(state.selected.medClass);
   if (medClass.length) {
-    pieces.push(`classe thérapeutique : ${joinClinical(medClass)}`);
+    chunks.push(`classe thérapeutique : ${joinClinical(medClass)}`);
   }
 
   const medMolecule = safeArray(state.selected.medMolecule);
   const medDose = text("medDose", doc);
   const medTiming = safeArray(state.selected.medTiming);
+
   if (medMolecule.length) {
     let line = `molécule(s) : ${joinClinical(medMolecule)}`;
     if (medDose) line += ` (${medDose})`;
     if (medTiming.length) line += `, prise ${joinClinical(medTiming)}`;
-    pieces.push(line);
+    chunks.push(line);
   }
 
   const switchPreset = state.selected.switchPreset || "";
   if (switchPreset) {
-    pieces.push(`switch thérapeutique : ${switchPreset}`);
+    chunks.push(`switch thérapeutique : ${switchPreset}`);
   }
 
-  const free = text("treatment", doc);
-  if (free) {
-    pieces.push(`traitement résumé : ${free.replace(/\n/g, "; ")}`);
+  if (hasText(text("treatment", doc))) {
+    chunks.push(`traitement résumé : ${text("treatment", doc).replace(/\n/g, "; ")}`);
   }
 
-  return pieces.length ? `${cap(pieces.join(". "))}.` : "";
+  return chunks.length ? `${cap(chunks.join(". "))}.` : "";
 }
 
 /* =========================================================
@@ -326,7 +345,7 @@ function buildSuicideRisk(doc = document) {
 }
 
 /* =========================================================
-   CONSOMMATIONS + CALCUL ALCOOL
+   ALCOOL + CALCUL UNITÉS
 ========================================================= */
 
 export function calculateAlcoholUnits(doc = document) {
@@ -341,8 +360,6 @@ export function calculateAlcoholUnits(doc = document) {
     return 0;
   }
 
-  // unités ~ 10 g d’éthanol
-  // grammes = volume_ml * (ABV/100) * 0.8
   const grams = volume * (degree / 100) * 0.8;
   const units = Math.round((grams / 10) * 10) / 10;
 
@@ -370,9 +387,7 @@ function buildConsumption(doc = document) {
   if (hasText(text("alcLast", doc))) alcParts.push(`dernière prise : ${text("alcLast", doc)}`);
   if (hasText(text("alcStart", doc))) alcParts.push(`début de consommation : ${text("alcStart", doc)}`);
   if (hasText(text("alcCharacter", doc))) alcParts.push(`caractère de consommation : ${text("alcCharacter", doc)}`);
-
   if (state.alcoholUnits > 0) alcParts.push(`calcul estimatif : ${state.alcoholUnits} unité(s)`);
-
   if (hasText(text("alcFree", doc))) alcParts.push(text("alcFree", doc));
 
   if (alcParts.length) {
@@ -395,36 +410,29 @@ function buildConsumption(doc = document) {
    SEVRAGE
 ========================================================= */
 
-function distributeDailyTotal(total, step, slots, terminalOrder) {
-  // slots = ["8h","12h","18h","22h"]
-  // step = 5 ou 1.25
-  // terminalOrder = ordre de suppression finale
-  let remaining = total;
+function distributeDailyTotal(total, step) {
+  const slots = ["8h", "12h", "18h", "22h"];
   const values = { "8h": 0, "12h": 0, "18h": 0, "22h": 0 };
 
-  // Tant que possible, on distribue en "couches" complètes
-  while (remaining > 0) {
+  const terminalThreshold = step * 4;
+
+  if (total <= terminalThreshold) {
+    const activeCount = Math.round(total / step);
+    const keepOrder = ["8h", "22h", "12h", "18h"];
+    for (let i = 0; i < activeCount; i += 1) {
+      values[keepOrder[i]] = step;
+    }
+    return values;
+  }
+
+  let remaining = total;
+  while (remaining >= step) {
     for (const slot of slots) {
       if (remaining >= step) {
         values[slot] += step;
         remaining -= step;
       }
     }
-    if (remaining < step) break;
-  }
-
-  // Réorganiser en phase terminale si total <= 4*step
-  const fullTerminal = step * 4;
-  if (total <= fullTerminal) {
-    const activeCount = Math.round(total / step);
-    const terminalValues = { "8h": 0, "12h": 0, "18h": 0, "22h": 0 };
-
-    // ordre de conservation inverse de l’ordre de retrait
-    const keepOrder = ["8h", "22h", "12h", "18h"];
-    for (let i = 0; i < activeCount; i += 1) {
-      terminalValues[keepOrder[i]] = step;
-    }
-    return terminalValues;
   }
 
   return values;
@@ -432,17 +440,16 @@ function distributeDailyTotal(total, step, slots, terminalOrder) {
 
 function buildValiumSchedule(startDose, days, startDate) {
   const rows = [];
-  const slots = ["8h", "12h", "18h", "22h"];
-  const terminalOrder = ["18h", "12h", "22h", "8h"];
+  const totals = [];
 
-  let totals = [];
   if (days >= 1) totals.push(startDose);
   if (days >= 2) totals.push(startDose);
 
   let current = startDose;
+
   while (totals.length < days) {
     if (current === 30) {
-      current = 20; // règle clinique donnée par l’utilisateur
+      current = 20;
     } else {
       current = Math.max(0, current - 5);
     }
@@ -455,8 +462,7 @@ function buildValiumSchedule(startDose, days, startDate) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + index);
 
-    const map = distributeDailyTotal(total, 5, slots, terminalOrder);
-
+    const map = distributeDailyTotal(total, 5);
     const row = {
       dayLabel: date.toLocaleDateString("fr-BE", { weekday: "long" }),
       dateLabel: date.toLocaleDateString("fr-BE"),
@@ -464,14 +470,13 @@ function buildValiumSchedule(startDose, days, startDate) {
       total
     };
 
-    for (const slot of slots) {
-      let value = map[slot];
-      let display = value ? `${value} mg` : "-";
-      if (previousMap && previousMap[slot] > value) {
+    ["8h", "12h", "18h", "22h"].forEach(slot => {
+      let display = map[slot] ? `${map[slot]} mg` : "-";
+      if (previousMap && previousMap[slot] > map[slot]) {
         display = `⟦${display}⟧`;
       }
       row.slots[slot] = display;
-    }
+    });
 
     previousMap = map;
     rows.push(row);
@@ -482,14 +487,14 @@ function buildValiumSchedule(startDose, days, startDate) {
 
 function buildTemestaSchedule(startDose, days, startDate) {
   const rows = [];
-  const slots = ["8h", "12h", "18h", "22h"];
+  const totals = [];
   const step = 1.25;
 
-  let totals = [];
   if (days >= 1) totals.push(startDose);
   if (days >= 2) totals.push(startDose);
 
   let current = startDose;
+
   while (totals.length < days) {
     current = Math.max(0, Math.round((current - step) * 100) / 100);
     totals.push(current);
@@ -501,8 +506,7 @@ function buildTemestaSchedule(startDose, days, startDate) {
     const date = new Date(startDate);
     date.setDate(date.getDate() + index);
 
-    const map = distributeDailyTotal(total, step, slots, ["18h", "12h", "22h", "8h"]);
-
+    const map = distributeDailyTotal(total, step);
     const row = {
       dayLabel: date.toLocaleDateString("fr-BE", { weekday: "long" }),
       dateLabel: date.toLocaleDateString("fr-BE"),
@@ -510,14 +514,15 @@ function buildTemestaSchedule(startDose, days, startDate) {
       total
     };
 
-    for (const slot of slots) {
-      let value = map[slot];
-      let display = value ? `${value.toFixed(2).replace(".00","").replace(".50",".5").replace(".25",".25")} mg` : "-";
-      if (previousMap && previousMap[slot] > value) {
+    ["8h", "12h", "18h", "22h"].forEach(slot => {
+      let display = map[slot]
+        ? `${map[slot].toFixed(2).replace(".00", "").replace(".50", ".5").replace(".25", ".25")} mg`
+        : "-";
+      if (previousMap && previousMap[slot] > map[slot]) {
         display = `⟦${display}⟧`;
       }
       row.slots[slot] = display;
-    }
+    });
 
     previousMap = map;
     rows.push(row);
@@ -548,12 +553,9 @@ export function buildWithdrawalPlan(doc = document) {
 
   if (!days || !dose) return "";
 
-  let rows = [];
-  if (drug === "Valium") {
-    rows = buildValiumSchedule(dose, days, startDate);
-  } else {
-    rows = buildTemestaSchedule(dose, days, startDate);
-  }
+  const rows = drug === "Valium"
+    ? buildValiumSchedule(dose, days, startDate)
+    : buildTemestaSchedule(dose, days, startDate);
 
   const result = formatWithdrawalRows(rows, drug);
   setWithdrawalPlanText(result);
@@ -594,7 +596,8 @@ function parseInboxTasks(doc = document) {
     });
   });
 
-  if ($( "taskInbox", doc)) $("taskInbox", doc).value = "";
+  const inbox = $("taskInbox", doc);
+  if (inbox) inbox.value = "";
 }
 
 function renderTodoPanel(doc = document) {
@@ -615,11 +618,11 @@ function renderTodoPanel(doc = document) {
     const row = doc.createElement("div");
     row.className = "stack-item";
 
-    const main = doc.createElement("div");
-    main.style.display = "flex";
-    main.style.justifyContent = "space-between";
-    main.style.alignItems = "center";
-    main.style.gap = "8px";
+    const header = doc.createElement("div");
+    header.style.display = "flex";
+    header.style.justifyContent = "space-between";
+    header.style.alignItems = "center";
+    header.style.gap = "8px";
 
     const title = doc.createElement("div");
     title.textContent = task.title + (task.done ? " — fait" : "");
@@ -649,10 +652,10 @@ function renderTodoPanel(doc = document) {
 
     actions.appendChild(toggleBtn);
     actions.appendChild(deleteBtn);
-    main.appendChild(title);
-    main.appendChild(actions);
 
-    row.appendChild(main);
+    header.appendChild(title);
+    header.appendChild(actions);
+    row.appendChild(header);
 
     const meta = [];
     if (task.priority) meta.push(`priorité ${task.priority}`);
@@ -660,6 +663,7 @@ function renderTodoPanel(doc = document) {
     if (task.duration) meta.push(`durée ${task.duration}`);
     if (Array.isArray(task.halfDay) && task.halfDay.length) meta.push(`demi-journée ${task.halfDay.join(", ")}`);
     if (Array.isArray(task.set) && task.set.length) meta.push(`set ${task.set.join(", ")}`);
+
     if (meta.length) {
       const metaEl = doc.createElement("div");
       metaEl.style.marginTop = "6px";
@@ -797,192 +801,7 @@ PLAN / RECOMMANDATIONS
 }
 
 /* =========================================================
-   HOSPITALISATION
-========================================================= */
-
-function buildHospitalAdmissionWeek1(doc = document) {
-  const g = packGender();
-  const sections = [];
-
-  sections.push(`Motif et contexte
-
-${g.civility} est ${g.admis} en hospitalisation dans le cadre d’une demande de sevrage alcoolique. ${sentence(text("mainReason", doc) || "Le patient se montre demandeur d’une prise en charge structurée.")}`);
-
-  const cons = buildConsumption(doc);
-  if (cons) {
-    sections.push(`Consommations
-
-${cons}`);
-  }
-
-  const atcd = buildAntecedents(doc);
-  if (atcd) {
-    sections.push(`Antécédents
-
-${atcd}`);
-  }
-
-  const psycho = buildPsychosocial(doc);
-  if (psycho) {
-    sections.push(`Psychosocial
-
-${psycho}`);
-  }
-
-  sections.push(`Examen clinique / mental
-
-${buildExamMental(doc)}`);
-
-  const treatment = buildTreatment(doc);
-  if (treatment) {
-    sections.push(`Traitement
-
-${treatment}`);
-  }
-
-  const plan = mainPlanText(doc) || "Poursuite de la prise en charge en milieu hospitalier avec observation clinique, soutien motivationnel et préparation d’une éventuelle continuité de suivi.";
-  sections.push(`Plan / appréciation
-
-${plan}`);
-
-  return sections.join("\n\n");
-}
-
-function buildHospitalAdmissionWeek2(doc = document) {
-  const sections = [];
-
-  sections.push(`Retour de semaine intermédiaire
-
-${sentence(text("mainContext", doc) || "Le patient revient d’une semaine intermédiaire et en propose une élaboration clinique.")}`);
-
-  const cons = buildConsumption(doc);
-  if (cons) {
-    sections.push(`Éléments de consommation durant l’intervalle
-
-${cons}`);
-  }
-
-  sections.push(`Examen clinique bref
-
-${buildExamMental(doc)}`);
-
-  const treatment = buildTreatment(doc);
-  if (treatment) {
-    sections.push(`Traitement / suite
-
-${treatment}`);
-  }
-
-  sections.push(`Appréciation
-
-${sentence(text("mainPlan", doc) || "L’évaluation clinique globale reste compatible avec la poursuite de la prise en charge, avec discussion autour du suivi souhaité par le patient.")}`);
-
-  return sections.join("\n\n");
-}
-
-function buildHospitalEvolution(doc = document) {
-  const sections = [];
-
-  sections.push(`Évolution générale
-
-${sentence(text("mainContext", doc) || "L’évolution clinique est à réévaluer en fonction des entretiens, de la tolérance du sevrage et de l’élaboration en cours.")}`);
-
-  sections.push(`Examen mental
-
-${buildExamMental(doc)}`);
-
-  const treatment = buildTreatment(doc);
-  if (treatment) {
-    sections.push(`Traitement
-
-${treatment}`);
-  }
-
-  sections.push(`Travail psychothérapeutique / élaboration
-
-${sentence(text("mainPlan", doc) || "Les entretiens portent sur la compréhension du fonctionnement, les consommations, les facteurs déclenchants et le suivi envisagé.")}`);
-
-  return sections.join("\n\n");
-}
-
-function buildHospitalDischargeWeek1(doc = document) {
-  const sections = [];
-
-  sections.push(`Évolution générale
-
-${sentence(text("mainContext", doc) || "Le sevrage a été globalement bien toléré et la prise en charge a permis une première étape de mise à distance.")}`);
-
-  sections.push(`Examen mental de sortie
-
-${buildExamMental(doc)}`);
-
-  const treatment = buildTreatment(doc);
-  if (treatment) {
-    sections.push(`Traitement
-
-${treatment}`);
-  }
-
-  sections.push(`Projection semaine intermédiaire
-
-${sentence(text("mainPlan", doc) || "Le patient se projette dans la semaine intermédiaire avec des recommandations de prudence, de maintien de l’abstinence et de poursuite du travail d’introspection.")}`);
-
-  return sections.join("\n\n");
-}
-
-function buildHospitalDischargeWeek2(doc = document) {
-  const sections = [];
-
-  sections.push(`Clôture de prise en charge
-
-${sentence(text("mainContext", doc) || "La prise en charge hospitalière s’achève avec élaboration autour des éléments cliniques, addictologiques et des relais utiles.")}`);
-
-  sections.push(`Examen mental de sortie
-
-${buildExamMental(doc)}`);
-
-  const treatment = buildTreatment(doc);
-  if (treatment) {
-    sections.push(`Traitement de sortie
-
-${treatment}`);
-  }
-
-  const psycho = buildPsychosocial(doc);
-  if (psycho) {
-    sections.push(`Relais et psychosocial
-
-${psycho}`);
-  }
-
-  sections.push(`Suivi proposé
-
-${sentence(text("mainPlan", doc) || "Un suivi ambulatoire, psychiatrique et/ou psychothérapeutique, est discuté et encouragé selon l’accord du patient.")}`);
-
-  return sections.join("\n\n");
-}
-
-function buildHospitalisation(doc = document) {
-  switch (state.subType) {
-    case "admission semaine 1":
-      return buildHospitalAdmissionWeek1(doc);
-    case "admission semaine 2":
-      return buildHospitalAdmissionWeek2(doc);
-    case "évolution en cours":
-      return buildHospitalEvolution(doc);
-    case "sortie semaine 1":
-      return buildHospitalDischargeWeek1(doc);
-    case "sortie semaine 2":
-      return buildHospitalDischargeWeek2(doc);
-    case "synthèse d’hospitalisation":
-      return `${buildHospitalEvolution(doc)}\n\n${buildHospitalDischargeWeek2(doc)}`;
-    default:
-      return buildHospitalEvolution(doc);
-  }
-}
-
-/* =========================================================
-   CONSULTATION / URGENCES / PRÉADMISSION
+   TYPES DE TEXTE
 ========================================================= */
 
 function buildConsultation(doc = document) {
@@ -1052,6 +871,167 @@ ${plan}`);
   return sections.join("\n\n");
 }
 
+function buildHospitalAdmissionWeek1(doc = document) {
+  const g = packGender();
+  const sections = [];
+
+  sections.push(`Motif et contexte
+
+${g.civility} est ${g.admis} en hospitalisation dans le cadre d’une demande de sevrage alcoolique. ${sentence(text("mainReason", doc) || "Le patient se montre demandeur d’une prise en charge structurée.")}`);
+
+  const cons = buildConsumption(doc);
+  if (cons) sections.push(`Consommations
+
+${cons}`);
+
+  const atcd = buildAntecedents(doc);
+  if (atcd) sections.push(`Antécédents
+
+${atcd}`);
+
+  const psycho = buildPsychosocial(doc);
+  if (psycho) sections.push(`Psychosocial
+
+${psycho}`);
+
+  sections.push(`Examen clinique / mental
+
+${buildExamMental(doc)}`);
+
+  const treatment = buildTreatment(doc);
+  if (treatment) sections.push(`Traitement
+
+${treatment}`);
+
+  const plan = mainPlanText(doc) || "Poursuite de la prise en charge en milieu hospitalier avec observation clinique, soutien motivationnel et préparation d’une éventuelle continuité de suivi.";
+  sections.push(`Plan / appréciation
+
+${plan}`);
+
+  return sections.join("\n\n");
+}
+
+function buildHospitalAdmissionWeek2(doc = document) {
+  const sections = [];
+
+  sections.push(`Retour de semaine intermédiaire
+
+${sentence(text("mainContext", doc) || "Le patient revient d’une semaine intermédiaire et en propose une élaboration clinique.")}`);
+
+  const cons = buildConsumption(doc);
+  if (cons) sections.push(`Éléments de consommation durant l’intervalle
+
+${cons}`);
+
+  sections.push(`Examen clinique bref
+
+${buildExamMental(doc)}`);
+
+  const treatment = buildTreatment(doc);
+  if (treatment) sections.push(`Traitement / suite
+
+${treatment}`);
+
+  sections.push(`Appréciation
+
+${sentence(text("mainPlan", doc) || "L’évaluation clinique globale reste compatible avec la poursuite de la prise en charge, avec discussion autour du suivi souhaité par le patient.")}`);
+
+  return sections.join("\n\n");
+}
+
+function buildHospitalEvolution(doc = document) {
+  const sections = [];
+
+  sections.push(`Évolution générale
+
+${sentence(text("mainContext", doc) || "L’évolution clinique est à réévaluer en fonction des entretiens, de la tolérance du sevrage et de l’élaboration en cours.")}`);
+
+  sections.push(`Examen mental
+
+${buildExamMental(doc)}`);
+
+  const treatment = buildTreatment(doc);
+  if (treatment) sections.push(`Traitement
+
+${treatment}`);
+
+  sections.push(`Travail psychothérapeutique / élaboration
+
+${sentence(text("mainPlan", doc) || "Les entretiens portent sur la compréhension du fonctionnement, les consommations, les facteurs déclenchants et le suivi envisagé.")}`);
+
+  return sections.join("\n\n");
+}
+
+function buildHospitalDischargeWeek1(doc = document) {
+  const sections = [];
+
+  sections.push(`Évolution générale
+
+${sentence(text("mainContext", doc) || "Le sevrage a été globalement bien toléré et la prise en charge a permis une première étape de mise à distance.")}`);
+
+  sections.push(`Examen mental de sortie
+
+${buildExamMental(doc)}`);
+
+  const treatment = buildTreatment(doc);
+  if (treatment) sections.push(`Traitement
+
+${treatment}`);
+
+  sections.push(`Projection semaine intermédiaire
+
+${sentence(text("mainPlan", doc) || "Le patient se projette dans la semaine intermédiaire avec des recommandations de prudence, de maintien de l’abstinence et de poursuite du travail d’introspection.")}`);
+
+  return sections.join("\n\n");
+}
+
+function buildHospitalDischargeWeek2(doc = document) {
+  const sections = [];
+
+  sections.push(`Clôture de prise en charge
+
+${sentence(text("mainContext", doc) || "La prise en charge hospitalière s’achève avec élaboration autour des éléments cliniques, addictologiques et des relais utiles.")}`);
+
+  sections.push(`Examen mental de sortie
+
+${buildExamMental(doc)}`);
+
+  const treatment = buildTreatment(doc);
+  if (treatment) sections.push(`Traitement de sortie
+
+${treatment}`);
+
+  const psycho = buildPsychosocial(doc);
+  if (psycho) sections.push(`Relais et psychosocial
+
+${psycho}`);
+
+  sections.push(`Suivi proposé
+
+${sentence(text("mainPlan", doc) || "Un suivi ambulatoire, psychiatrique et/ou psychothérapeutique, est discuté et encouragé selon l’accord du patient.")}`);
+
+  return sections.join("\n\n");
+}
+
+function buildHospitalisation(doc = document) {
+  switch (state.subType) {
+    case "admission semaine 1":
+      return buildHospitalAdmissionWeek1(doc);
+    case "admission semaine 2":
+      return buildHospitalAdmissionWeek2(doc);
+    case "évolution en cours":
+      return buildHospitalEvolution(doc);
+    case "sortie semaine 1":
+      return buildHospitalDischargeWeek1(doc);
+    case "sortie semaine 2":
+      return buildHospitalDischargeWeek2(doc);
+    case "synthèse d’hospitalisation":
+      return `${buildHospitalEvolution(doc)}\n\n${buildHospitalDischargeWeek2(doc)}`;
+    default:
+      return buildHospitalEvolution(doc);
+  }
+}
+
 function buildPreadmission(doc = document) {
   const sections = [];
 
@@ -1085,10 +1065,6 @@ ${sentence(text("mainPlan", doc) || "L’indication d’admission reste à discu
   return sections.join("\n\n");
 }
 
-/* =========================================================
-   ADMINISTRATIF / MUTUELLE
-========================================================= */
-
 function buildMutuelle(doc = document) {
   const g = packGender();
   const sections = [];
@@ -1107,18 +1083,14 @@ ${context}`);
 ${buildExamMental(doc)}`);
 
   const psycho = buildPsychosocial(doc);
-  if (psycho) {
-    sections.push(`Sur le plan psychosocial
+  if (psycho) sections.push(`Sur le plan psychosocial
 
 ${psycho}`);
-  }
 
   const treatment = buildTreatment(doc);
-  if (treatment) {
-    sections.push(`Sur le plan thérapeutique
+  if (treatment) sections.push(`Sur le plan thérapeutique
 
 ${treatment}`);
-  }
 
   const functionText = text("mainPlan", doc) || "Le retentissement fonctionnel est marqué par une altération des capacités d’adaptation, de concentration et d’organisation.";
   sections.push(`Retentissement fonctionnel
@@ -1153,10 +1125,6 @@ function buildAdministrative(doc = document) {
 
   return `Je soussigné certifie avoir examiné ${g.civility}.\n\nÉtat clinique\n\n${buildExamMental(doc)}\n\nCe document est établi à la demande de l’intéressé${g.male ? "" : "e"}.`;
 }
-
-/* =========================================================
-   MAIL / COURRIER
-========================================================= */
 
 function buildMail(doc = document) {
   const subtype = state.subType || "réponse simple";
@@ -1204,7 +1172,7 @@ function buildQuestionnaire(doc = document) {
 }
 
 /* =========================================================
-   MAIN GENERATOR
+   GÉNÉRATEUR CENTRAL
 ========================================================= */
 
 function generateMainContent(doc = document) {
@@ -1261,7 +1229,7 @@ function generateAdaptationAppendix(doc = document) {
 }
 
 /* =========================================================
-   DOCUMENT CALLBACKS
+   CALLBACKS DOCUMENTAIRES
 ========================================================= */
 
 async function handleRegenerateCurrent({ kind }) {
@@ -1276,7 +1244,7 @@ async function handleAppendCurrent() {
 }
 
 /* =========================================================
-   UI BINDINGS THAT BELONG TO GENERATION
+   BINDINGS GÉNÉRATION
 ========================================================= */
 
 function bindAlcoholCalculator(doc = document) {
@@ -1289,10 +1257,9 @@ function bindAlcoholCalculator(doc = document) {
 
 function bindWithdrawal(doc = document) {
   $("btnBuildWithdrawal", doc)?.addEventListener("click", async () => {
-    const result = buildWithdrawalPlan(doc);
+    buildWithdrawalPlan(doc);
     renderWithdrawalPlan(doc);
     await regenerateCurrentDocument(doc);
-    return result;
   });
 
   $("btnPrintWithdrawal", doc)?.addEventListener("click", () => {
@@ -1334,9 +1301,9 @@ function bindTodo(doc = document) {
   });
 
   $("btnOneMicroTask", doc)?.addEventListener("click", () => {
-    const pool = state.taskItems.filter(t => !t.done).filter(t => {
-      return ["mail", "appel", "administratif"].some(x => (t.type || []).includes(x));
-    });
+    const pool = state.taskItems.filter(t => !t.done).filter(t =>
+      ["mail", "appel", "administratif"].some(x => (t.type || []).includes(x))
+    );
 
     const source = pool.length ? pool : state.taskItems.filter(t => !t.done);
     if (!source.length) {
@@ -1346,16 +1313,6 @@ function bindTodo(doc = document) {
 
     const pick = source[Math.floor(Math.random() * source.length)];
     alert(`👉 Micro-action :\n\n${pick.title}`);
-  });
-}
-
-function bindSmartMailCreation(doc = document) {
-  $("btnNewLetterTab", doc)?.addEventListener("click", () => {
-    // la création brute est déjà gérée dans app-documents.js,
-    // ici on force simplement un refresh visuel du texte si nécessaire
-    window.setTimeout(() => {
-      refreshEditorTargetFromState(doc);
-    }, 20);
   });
 }
 
@@ -1372,7 +1329,6 @@ export function initializeGeneratorModule(doc = document) {
   bindAlcoholCalculator(doc);
   bindWithdrawal(doc);
   bindTodo(doc);
-  bindSmartMailCreation(doc);
 
   renderAlcoholUnits(doc);
   renderWithdrawalPlan(doc);
@@ -1383,13 +1339,13 @@ function bootstrap(doc = document) {
   initializeUIModule(doc);
   initializeGeneratorModule(doc);
 
-  // Premier rendu initial
-  setTimeout(async () => {
+  window.setTimeout(async () => {
     await regenerateCurrentDocument(doc);
-    renderTodoPanel(doc);
     renderAlcoholUnits(doc);
     renderWithdrawalPlan(doc);
-  }, 30);
+    renderTodoPanel(doc);
+    refreshEditorTargetFromState(doc);
+  }, 40);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
