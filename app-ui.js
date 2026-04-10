@@ -1,4 +1,4 @@
-// app-ui.js — V8
+// app-ui.js — V8 corrigé
 // Interface simplifiée, cohérente avec le HTML V8
 
 import {
@@ -25,11 +25,7 @@ import {
   clearSerializedFieldsInDOM,
   toggleLeftCollapsed,
   toggleRightCollapsed,
-  setLeftCollapsed,
-  setRightCollapsed,
   toggleWindow,
-  openWindow,
-  closeWindow,
   closeAllWindows,
   isWindowOpen,
   toggleHabitDay
@@ -439,7 +435,7 @@ export function renderHabitGrid(doc = document) {
 }
 
 /* =========================================================
-   WINDOWS
+   WINDOWS — UNE SEULE ACTIVE
 ========================================================= */
 
 const OPEN_WINDOW_BUTTON_MAP = {
@@ -457,25 +453,25 @@ const OPEN_WINDOW_BUTTON_MAP = {
   openAppearancePanel: "appearanceWindow"
 };
 
+const ALL_WINDOW_IDS = [
+  "mainEncodingWindow",
+  "examWindow",
+  "treatmentWindow",
+  "psychosocialWindow",
+  "antecedentsWindow",
+  "riskWindow",
+  "consumptionWindow",
+  "withdrawalWindow",
+  "mailResponseWindow",
+  "todoWindow",
+  "presetsWindow",
+  "appearanceWindow"
+];
+
 export function renderOpenWindows(doc = document) {
   const overlay = $("modalOverlay", doc);
 
-  const allWindowIds = [
-    "mainEncodingWindow",
-    "examWindow",
-    "treatmentWindow",
-    "psychosocialWindow",
-    "antecedentsWindow",
-    "riskWindow",
-    "consumptionWindow",
-    "withdrawalWindow",
-    "mailResponseWindow",
-    "todoWindow",
-    "presetsWindow",
-    "appearanceWindow"
-  ];
-
-  allWindowIds.forEach(windowId => {
+  ALL_WINDOW_IDS.forEach(windowId => {
     const el = $(windowId, doc);
     if (!el) return;
     el.classList.toggle("hidden", !isWindowOpen(windowId));
@@ -499,7 +495,9 @@ export function bindWindowButtons(doc = document) {
 
   doc.querySelectorAll("[data-close-window]").forEach(btn => {
     btn.addEventListener("click", () => {
-      closeWindow(btn.dataset.closeWindow);
+      const windowId = btn.dataset.closeWindow;
+      if (!windowId) return;
+      toggleWindow(windowId);
       renderOpenWindows(doc);
     });
   });
@@ -578,7 +576,7 @@ export function bindPersistenceIfPresent(doc = document) {
 }
 
 /* =========================================================
-   TOPBAR + ACTION STRIP
+   ACTION STRIP
 ========================================================= */
 
 export function bindTopbarAndActions(doc = document) {
@@ -591,14 +589,6 @@ export function bindTopbarAndActions(doc = document) {
   $("btnTodoText", doc)?.addEventListener("click", async () => {
     state.output = "todo";
     renderAllUI(doc);
-    await regenerateCurrentDocument(doc);
-  });
-
-  $("btnRegenerateCurrentTab", doc)?.addEventListener("click", async () => {
-    if (state.output !== "texte") {
-      state.output = "texte";
-      renderAllUI(doc);
-    }
     await regenerateCurrentDocument(doc);
   });
 
