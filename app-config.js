@@ -1,4 +1,4 @@
-// app-config.js — V8
+// app-config.js — V8 corrigé
 // Configuration centrale alignée sur le HTML V8
 
 export const APP_STORAGE_KEY = "psychnote_v8";
@@ -181,6 +181,75 @@ export const CONTEXTUAL_LEFT_PANEL = {
     ]
   }
 };
+
+/* =========================================================
+   CONSTANTES MANQUANTES AJOUTÉES
+========================================================= */
+
+export const MAIN_FREQUENT_MOTIVES = [
+  "anxiété",
+  "humeur dépressive",
+  "crise suicidaire",
+  "idéations suicidaires",
+  "insomnie",
+  "demande de sevrage alcool",
+  "consommations problématiques",
+  "attaque de panique",
+  "souffrance psychosociale",
+  "évaluation diagnostique",
+  "trouble du comportement",
+  "décompensation anxieuse",
+  "décompensation thymique",
+  "conflit familial",
+  "retentissement fonctionnel important"
+];
+
+export const MAIN_FREQUENT_SYMPTOMS = [
+  "ruminations",
+  "anhédonie",
+  "fatigabilité",
+  "hypervigilance",
+  "troubles du sommeil",
+  "tension interne",
+  "irritabilité",
+  "aboulie",
+  "repli",
+  "hallucinations auditives rapportées",
+  "angoisse",
+  "sentiment d’épuisement",
+  "baisse de l’élan",
+  "culpabilité",
+  "difficultés de concentration"
+];
+
+export const MAIN_FREQUENT_PLANS = [
+  "poursuite du suivi psychiatrique",
+  "surveillance clinique",
+  "évaluation addictologique",
+  "travail psychoéducatif",
+  "coordination avec le réseau",
+  "contact familial si accord",
+  "adaptation thérapeutique",
+  "préparation de sortie",
+  "plan de crise",
+  "proposer hospitalisation",
+  "mise en sécurité",
+  "réévaluation rapide",
+  "soutien ambulatoire",
+  "orientation psychothérapie"
+];
+
+export const ALCOHOL_FUNCTION_QUICK = [
+  "anxiolytique",
+  "sommeil",
+  "socialisation",
+  "gestion émotion",
+  "solitude",
+  "ennui",
+  "habitude",
+  "impulsivité",
+  "couper les pensées"
+];
 
 /* =========================================================
    OPTIONS DE TOKENS
@@ -1075,92 +1144,4 @@ export const PRESET_PATCHES = {
       msePreset: "anxio-dépressif",
       mseMood: ["humeur triste", "humeur fragile"],
       mseAnxiety: ["anxiété diffuse", "ruminations"],
-      mseSleep: ["insomnie"]
-    }
-  },
-
-  "crise suicidaire": {
-    selected: {
-      riskIdeas: "actives",
-      riskIdeasDetailed: "actives",
-      riskSeverity: "élevé",
-      riskQuick: ["idées noires", "scénario", "intentionnalité"]
-    }
-  },
-
-  "sevrage alcool simple": {
-    selected: {
-      alcPattern: ["quotidien"],
-      alcWithdrawal: ["sevrage simple"]
-    }
-  },
-
-  "sevrage alcool compliqué": {
-    selected: {
-      alcPattern: ["quotidien", "avec consommation matinale"],
-      alcWithdrawal: ["sevrage compliqué", "DT", "convulsions"]
-    }
-  },
-
-  "insomnie / anxiété": {
-    selected: {
-      mseAnxiety: ["anxiété diffuse", "tension interne"],
-      mseSleep: ["insomnie", "endormissement difficile"]
-    }
-  },
-
-  "trauma probable": {
-    selected: {
-      mseTrauma: ["hypervigilance", "reviviscences", "évitement"]
-    }
-  }
-};
-
-/* =========================================================
-   ÉTAT PAR DÉFAUT
-========================================================= */
-
-export const DEFAULT_STATE = {
-  gender: "femme",
-  civility: "auto",
-
-  type: "hospitalisation",
-  subType: "admission semaine 1",
-  mode: "complet",
-  output: "texte",
-
-  theme: "clair",
-  season: "printemps",
-  font: "classic",
-  transparency: "low",
-  shadowMode: "soft",
-
-  leftCollapsed: false,
-  rightCollapsed: false,
-  rightView: "todo",
-
-  selected: {},
-
-  mainDocs: [],
-  letterDocs: [],
-  activeMainDocId: null,
-  activeLetterDocId: null,
-
-  activeWindowId: null,
-
-  taskItems: [],
-  recentDocuments: [],
-  habitTrack: {},
-
-  alcoholUnits: 0,
-  withdrawalPlanText: ""
-};
-
-export function buildEmptySelectedState() {
-  const selected = {};
-  for (const group of TOKEN_GROUPS) {
-    if (group.direct) continue;
-    selected[group.key] = group.single ? "" : [];
-  }
-  return selected;
-    }
+      mseSleep:
