@@ -1,53 +1,47 @@
-// app-ui.js
-// Interface V7 : menus, volets, fenêtres flottantes, apparence, tokens, interactions
+// app-ui.js — V8
+// Interface simplifiée, cohérente avec le HTML V8
 
 import {
   TYPE_OPTIONS,
   SUBTYPE_OPTIONS,
   MODE_OPTIONS,
   OUTPUT_OPTIONS,
-  APPEARANCE_OPTIONS,
   TOKEN_GROUPS,
-  CONTEXTUAL_LEFT_PANEL,
-  PRESET_PATCHES,
+  DOC_TEMPLATE_OPTIONS,
   SMART_PRESET_OPTIONS,
-  WINDOW_NAMES,
-  DOCUMENT_KIND
+  CONTEXTUAL_LEFT_PANEL
 } from "./app-config.js";
 
 import {
   state,
   ensureValidTypeAndSubtype,
   setStateValue,
-  toggleSelectedValue,
   setSelectedValue,
+  toggleSelectedValue,
   applyPreset,
   saveStateToStorage,
   loadStateFromStorage,
   initializeState,
   clearSerializedFieldsInDOM,
-  setLeftPanelWidth,
-  setRightPanelWidth,
   toggleLeftCollapsed,
   toggleRightCollapsed,
   setLeftCollapsed,
   setRightCollapsed,
+  toggleWindow,
   openWindow,
   closeWindow,
-  toggleWindow,
+  closeAllWindows,
   isWindowOpen,
-  closeAllWindows
+  toggleHabitDay
 } from "./app-state.js";
 
 import {
   initializeDocumentsModule,
   refreshEditorTargetFromState,
   regenerateCurrentDocument,
-  appendUpdateToCurrentDocument,
-  createNewLetterDocument,
-  saveActiveEditorToState,
   renderAllDocumentTabs,
-  renderRecentDocuments
+  renderRecentDocuments,
+  saveActiveEditorToState
 } from "./app-documents.js";
 
 /* =========================================================
@@ -56,15 +50,9 @@ import {
 
 let uiInitialized = false;
 let regenerateTimer = null;
-let leftResizeActive = false;
-let rightResizeActive = false;
 
 function $(id, doc = document) {
   return doc.getElementById(id);
-}
-
-function cleanText(value) {
-  return (value || "").toString().trim();
 }
 
 function debounceRegenerate(doc = document, delay = 220) {
@@ -74,13 +62,18 @@ function debounceRegenerate(doc = document, delay = 220) {
   }, delay);
 }
 
+function cleanText(value) {
+  return (value || "").toString().trim();
+}
+
 function seasonClassName(season) {
   switch (season) {
-    case "printemps": return "season-spring";
     case "été": return "season-summer";
     case "automne": return "season-autumn";
     case "hiver": return "season-winter";
-    default: return "season-spring";
+    case "printemps":
+    default:
+      return "season-spring";
   }
 }
 
@@ -90,33 +83,33 @@ function themeClassName(theme) {
 
 function fontClassName(font) {
   switch (font) {
-    case "classic": return "font-classic";
+    case "inter": return "font-inter";
     case "serif": return "font-serif";
     case "hand": return "font-hand";
     case "anime": return "font-anime";
-    case "inter":
+    case "classic":
     default:
-      return "font-inter";
+      return "font-classic";
   }
 }
 
 function transparencyClassName(level) {
   switch (level) {
-    case "low": return "transparency-low";
+    case "medium": return "transparency-medium";
     case "high": return "transparency-high";
-    case "medium":
+    case "low":
     default:
-      return "transparency-medium";
+      return "transparency-low";
   }
 }
 
 function shadowClassName(mode) {
   switch (mode) {
     case "off": return "shadows-off";
-    case "soft": return "shadows-soft";
-    case "on":
+    case "on": return "shadows-on";
+    case "soft":
     default:
-      return "shadows-on";
+      return "shadows-soft";
   }
 }
 
@@ -130,7 +123,7 @@ export function applyVisualState(doc = document) {
   body.classList.remove(
     "theme-light", "theme-dark",
     "season-spring", "season-summer", "season-autumn", "season-winter",
-    "font-inter", "font-classic", "font-serif", "font-hand", "font-anime",
+    "font-classic", "font-inter", "font-serif", "font-hand", "font-anime",
     "transparency-low", "transparency-medium", "transparency-high",
     "shadows-off", "shadows-soft", "shadows-on",
     "left-collapsed", "right-collapsed"
@@ -146,9 +139,6 @@ export function applyVisualState(doc = document) {
 
   if (state.leftCollapsed) body.classList.add("left-collapsed");
   if (state.rightCollapsed) body.classList.add("right-collapsed");
-
-  doc.documentElement.style.setProperty("--left-panel-w", `${state.leftPanelWidth}px`);
-  doc.documentElement.style.setProperty("--right-panel-w", `${state.rightPanelWidth}px`);
 }
 
 /* =========================================================
@@ -161,17 +151,16 @@ export function renderTopDisplays(doc = document) {
     ["subTypeDisplay", state.subType],
     ["modeDisplay", state.mode],
     ["outputDisplay", state.output],
-
     ["metaType", state.type],
     ["metaSubType", state.subType],
     ["metaMode", state.mode],
     ["metaOutput", state.output]
   ];
 
-  for (const [id, value] of pairs) {
+  pairs.forEach(([id, value]) => {
     const el = $(id, doc);
     if (el) el.textContent = value;
-  }
+  });
 }
 
 /* =========================================================
@@ -206,8 +195,8 @@ function positionMenu(menuId, anchorEl, doc = document) {
   if (!menu || !anchorEl) return;
 
   const rect = anchorEl.getBoundingClientRect();
-  menu.style.left = `${Math.max(12, rect.left)}px`;
-  menu.style.top = `${rect.bottom + 6}px`;
+  menu.style.left = `${Math.max(8, rect.left)}px`;
+  menu.style.top = `${rect.bottom + 4}px`;
 }
 
 export function closeMenus(doc = document) {
@@ -218,27 +207,27 @@ export function closeMenus(doc = document) {
 }
 
 export function renderMenus(doc = document) {
-  renderMenu("menuType", TYPE_OPTIONS, state.type, (value) => {
+  renderMenu("menuType", TYPE_OPTIONS, state.type, value => {
     state.type = value;
     ensureValidTypeAndSubtype();
   }, doc);
 
-  renderMenu("menuSubType", SUBTYPE_OPTIONS[state.type] || [], state.subType, (value) => {
+  renderMenu("menuSubType", SUBTYPE_OPTIONS[state.type] || [], state.subType, value => {
     state.subType = value;
   }, doc);
 
-  renderMenu("menuMode", MODE_OPTIONS, state.mode, (value) => {
+  renderMenu("menuMode", MODE_OPTIONS, state.mode, value => {
     state.mode = value;
   }, doc);
 
-  renderMenu("menuOutput", OUTPUT_OPTIONS, state.output, (value) => {
+  renderMenu("menuOutput", OUTPUT_OPTIONS, state.output, value => {
     state.output = value;
   }, doc);
 }
 
 export function bindMenus(doc = document) {
   doc.querySelectorAll("[data-menu]").forEach(button => {
-    button.addEventListener("click", (event) => {
+    button.addEventListener("click", event => {
       event.stopPropagation();
       const menuId = button.dataset.menu;
       const menu = $(menuId, doc);
@@ -254,7 +243,7 @@ export function bindMenus(doc = document) {
     });
   });
 
-  doc.addEventListener("click", (event) => {
+  doc.addEventListener("click", event => {
     if (!event.target.closest(".menu") && !event.target.closest("[data-menu]")) {
       closeMenus(doc);
     }
@@ -270,13 +259,7 @@ function getTokenValueState(group) {
   return state.selected[group.key];
 }
 
-function renderTokenButton({
-  container,
-  option,
-  isActive,
-  onClick,
-  doc = document
-}) {
+function renderTokenButton({ container, option, isActive, onClick, doc = document }) {
   const btn = doc.createElement("button");
   btn.type = "button";
   btn.className = `token${isActive ? " active" : ""}`;
@@ -287,10 +270,10 @@ function renderTokenButton({
 
 function getContextualOptionsForGroup(group) {
   const contextual = CONTEXTUAL_LEFT_PANEL[state.type] || {};
-  if (group.id === "structurePresetChoices") return contextual.structures || group.options;
-  if (group.id === "writingBlockChoices") return contextual.blocks || group.options;
-  if (group.id === "writingPhraseChoices") return contextual.phrases || group.options;
-  return group.options;
+  if (group.id === "structurePresetChoices") return contextual.structures || [];
+  if (group.id === "writingBlockChoices") return contextual.blocks || [];
+  if (group.id === "writingPhraseChoices") return contextual.phrases || [];
+  return group.options || [];
 }
 
 function renderStandardTokenGroup(group, doc = document) {
@@ -314,15 +297,10 @@ function renderStandardTokenGroup(group, doc = document) {
       onClick: async () => {
         if (group.direct) {
           setStateValue(group.direct, option);
-          if (group.direct === "theme" || group.direct === "season" || group.direct === "font" || group.direct === "transparency" || group.direct === "shadowMode") {
+
+          if (["theme", "season", "font", "transparency", "shadowMode"].includes(group.direct)) {
             applyVisualState(doc);
             renderAllUI(doc);
-            return;
-          }
-
-          if (group.direct === "gender" || group.direct === "civility") {
-            renderAllUI(doc);
-            await regenerateCurrentDocument(doc);
             return;
           }
         } else {
@@ -344,51 +322,34 @@ function renderStandardTokenGroup(group, doc = document) {
   });
 }
 
-function renderQuickTypeChoices(doc = document) {
-  const typeContainer = $("docTypeQuickChoices", doc);
-  if (typeContainer) {
-    typeContainer.innerHTML = "";
-    TYPE_OPTIONS.forEach(type => {
-      renderTokenButton({
-        container: typeContainer,
-        option: type,
-        isActive: state.type === type,
-        doc,
-        onClick: async () => {
-          state.type = type;
-          ensureValidTypeAndSubtype();
-          renderAllUI(doc);
-          await regenerateCurrentDocument(doc);
-        }
-      });
-    });
-  }
-
-  const subtypeContainer = $("docSubTypeQuickChoices", doc);
-  if (subtypeContainer) {
-    subtypeContainer.innerHTML = "";
-    (SUBTYPE_OPTIONS[state.type] || []).forEach(subtype => {
-      renderTokenButton({
-        container: subtypeContainer,
-        option: subtype,
-        isActive: state.subType === subtype,
-        doc,
-        onClick: async () => {
-          state.subType = subtype;
-          renderAllUI(doc);
-          await regenerateCurrentDocument(doc);
-        }
-      });
-    });
-  }
-}
-
-function renderPresetButtonSet(containerId, names, doc = document) {
-  const container = $(containerId, doc);
+function renderSubTypeQuickChoices(doc = document) {
+  const container = $("docSubTypeQuickChoices", doc);
   if (!container) return;
+
   container.innerHTML = "";
 
-  names.forEach(name => {
+  (SUBTYPE_OPTIONS[state.type] || []).forEach(subtype => {
+    renderTokenButton({
+      container,
+      option: subtype,
+      isActive: state.subType === subtype,
+      doc,
+      onClick: async () => {
+        state.subType = subtype;
+        renderAllUI(doc);
+        await regenerateCurrentDocument(doc);
+      }
+    });
+  });
+}
+
+function renderPresetSet(containerId, presetNames, doc = document) {
+  const container = $(containerId, doc);
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  presetNames.forEach(name => {
     renderTokenButton({
       container,
       option: name,
@@ -405,15 +366,13 @@ function renderPresetButtonSet(containerId, names, doc = document) {
 
 export function renderTokenGroups(doc = document) {
   TOKEN_GROUPS.forEach(group => {
-    // Ces conteneurs sont gérés séparément comme presets applicatifs
-    if (group.id === "smartPresetChoices") return;
     renderStandardTokenGroup(group, doc);
   });
 
-  renderQuickTypeChoices(doc);
-  renderPresetButtonSet("docTemplateChoices", Object.keys(PRESET_PATCHES), doc);
-  renderPresetButtonSet("presetWrap", Object.keys(PRESET_PATCHES), doc);
-  renderPresetButtonSet("smartPresetChoices", SMART_PRESET_OPTIONS, doc);
+  renderSubTypeQuickChoices(doc);
+  renderPresetSet("docTemplateChoices", DOC_TEMPLATE_OPTIONS, doc);
+  renderPresetSet("smartPresetChoices", SMART_PRESET_OPTIONS, doc);
+  renderPresetSet("presetWrap", [...DOC_TEMPLATE_OPTIONS, ...SMART_PRESET_OPTIONS], doc);
 }
 
 /* =========================================================
@@ -453,14 +412,7 @@ export function renderHabitGrid(doc = document) {
   grid.innerHTML = "";
 
   const habits = state.selected.habitChoices || [];
-  if (!habits.length) {
-    for (let i = 0; i < 7; i += 1) {
-      const cell = doc.createElement("div");
-      cell.className = "habit-cell";
-      grid.appendChild(cell);
-    }
-    return;
-  }
+  if (!habits.length) return;
 
   habits.forEach(habit => {
     if (!state.habitTrack[habit]) {
@@ -471,15 +423,13 @@ export function renderHabitGrid(doc = document) {
       const cell = doc.createElement("div");
       cell.className = "habit-cell";
       cell.title = `${habit} — jour ${day + 1}`;
+
       if (state.habitTrack[habit][day]) {
-        cell.style.outline = "2px solid var(--accent)";
-        cell.style.opacity = "1";
-      } else {
-        cell.style.opacity = "0.5";
+        cell.style.background = "#d9d6cf";
       }
 
       cell.addEventListener("click", () => {
-        state.habitTrack[habit][day] = !state.habitTrack[habit][day];
+        toggleHabitDay(habit, day);
         renderHabitGrid(doc);
       });
 
@@ -489,7 +439,7 @@ export function renderHabitGrid(doc = document) {
 }
 
 /* =========================================================
-   FLOATING WINDOWS
+   WINDOWS
 ========================================================= */
 
 const OPEN_WINDOW_BUTTON_MAP = {
@@ -504,26 +454,36 @@ const OPEN_WINDOW_BUTTON_MAP = {
   openMailResponseWindow: "mailResponseWindow",
   openTodoWindow: "todoWindow",
   openPresetsWindow: "presetsWindow",
-  openAppearanceWindow: "appearanceWindow",
   openAppearancePanel: "appearanceWindow"
 };
 
 export function renderOpenWindows(doc = document) {
-  WINDOW_NAMES.forEach((windowId, index) => {
+  const overlay = $("modalOverlay", doc);
+
+  const allWindowIds = [
+    "mainEncodingWindow",
+    "examWindow",
+    "treatmentWindow",
+    "psychosocialWindow",
+    "antecedentsWindow",
+    "riskWindow",
+    "consumptionWindow",
+    "withdrawalWindow",
+    "mailResponseWindow",
+    "todoWindow",
+    "presetsWindow",
+    "appearanceWindow"
+  ];
+
+  allWindowIds.forEach(windowId => {
     const el = $(windowId, doc);
     if (!el) return;
-
-    const opened = isWindowOpen(windowId);
-    el.classList.toggle("hidden", !opened);
-
-    if (opened) {
-      const visibleIndex = state.openedWindows.indexOf(windowId);
-      const offset = visibleIndex >= 0 ? visibleIndex : index;
-      el.style.top = `${88 + offset * 18}px`;
-      el.style.left = `calc(50% + ${offset * 14}px)`;
-      el.style.zIndex = `${1400 + offset}`;
-    }
+    el.classList.toggle("hidden", !isWindowOpen(windowId));
   });
+
+  if (overlay) {
+    overlay.classList.toggle("hidden", !state.activeWindowId);
+  }
 }
 
 export function bindWindowButtons(doc = document) {
@@ -543,10 +503,15 @@ export function bindWindowButtons(doc = document) {
       renderOpenWindows(doc);
     });
   });
+
+  $("modalOverlay", doc)?.addEventListener("click", () => {
+    closeAllWindows();
+    renderOpenWindows(doc);
+  });
 }
 
 /* =========================================================
-   PANELS + RESIZERS
+   PANELS
 ========================================================= */
 
 export function renderPanelState(doc = document) {
@@ -559,38 +524,13 @@ export function renderPanelState(doc = document) {
   if (right) right.classList.toggle("collapsed", !!state.rightCollapsed);
 }
 
-function startLeftResize(event) {
-  leftResizeActive = true;
-  event.preventDefault();
-}
-
-function startRightResize(event) {
-  rightResizeActive = true;
-  event.preventDefault();
-}
-
-function stopResize() {
-  leftResizeActive = false;
-  rightResizeActive = false;
-}
-
-function handleResizeMove(event, doc = document) {
-  if (leftResizeActive) {
-    setLeftPanelWidth(event.clientX);
-    setLeftCollapsed(false);
-    renderPanelState(doc);
-  }
-
-  if (rightResizeActive) {
-    const width = window.innerWidth - event.clientX;
-    setRightPanelWidth(width);
-    setRightCollapsed(false);
-    renderPanelState(doc);
-  }
-}
-
 export function bindPanelControls(doc = document) {
   $("toggleLeftPanel", doc)?.addEventListener("click", () => {
+    toggleLeftCollapsed();
+    renderPanelState(doc);
+  });
+
+  $("collapseLeftPanel", doc)?.addEventListener("click", () => {
     toggleLeftCollapsed();
     renderPanelState(doc);
   });
@@ -600,67 +540,48 @@ export function bindPanelControls(doc = document) {
     renderPanelState(doc);
   });
 
-  $("collapseLeftPanel", doc)?.addEventListener("click", () => {
-    toggleLeftCollapsed();
-    renderPanelState(doc);
-  });
-
   $("collapseRightPanel", doc)?.addEventListener("click", () => {
     toggleRightCollapsed();
     renderPanelState(doc);
   });
-
-  $("leftPanelResizer", doc)?.addEventListener("mousedown", startLeftResize);
-  $("rightPanelResizer", doc)?.addEventListener("mousedown", startRightResize);
-
-  doc.addEventListener("mousemove", (event) => handleResizeMove(event, doc));
-  doc.addEventListener("mouseup", stopResize);
-  doc.addEventListener("mouseleave", stopResize);
 }
 
 /* =========================================================
-   SAVE / LOAD / RESET
+   PERSISTENCE
 ========================================================= */
 
-export function bindPersistenceButtons(doc = document) {
-  $("btnSave", doc)?.addEventListener("click", () => {
+export function bindPersistenceIfPresent(doc = document) {
+  const saveBtn = $("btnSave", doc);
+  const loadBtn = $("btnLoad", doc);
+  const resetBtn = $("btnReset", doc);
+
+  saveBtn?.addEventListener("click", () => {
     saveActiveEditorToState(doc);
     saveStateToStorage(doc);
   });
 
-  $("btnLoad", doc)?.addEventListener("click", () => {
+  loadBtn?.addEventListener("click", async () => {
     loadStateFromStorage(doc);
     renderAllUI(doc);
     refreshEditorTargetFromState(doc);
+    await regenerateCurrentDocument(doc);
   });
 
-  $("btnReset", doc)?.addEventListener("click", async () => {
-    localStorage.removeItem("psychnote_v7_modular");
+  resetBtn?.addEventListener("click", async () => {
+    localStorage.removeItem("psychnote_v8");
     initializeState(doc);
     clearSerializedFieldsInDOM(doc);
     renderAllUI(doc);
     refreshEditorTargetFromState(doc);
     await regenerateCurrentDocument(doc);
   });
-
-  $("btnDemo", doc)?.addEventListener("click", async () => {
-    applyPreset("rapport mutuelle anxio-dépressif", doc);
-    renderAllUI(doc);
-    await regenerateCurrentDocument(doc);
-  });
 }
 
 /* =========================================================
-   TOPBAR ACTIONS
+   TOPBAR + ACTION STRIP
 ========================================================= */
 
-export function bindTopbarActions(doc = document) {
-  $("btnText", doc)?.addEventListener("click", async () => {
-    state.output = "texte";
-    renderAllUI(doc);
-    await regenerateCurrentDocument(doc);
-  });
-
+export function bindTopbarAndActions(doc = document) {
   $("btnQuestionnaire", doc)?.addEventListener("click", async () => {
     state.output = "questionnaire";
     renderAllUI(doc);
@@ -673,6 +594,14 @@ export function bindTopbarActions(doc = document) {
     await regenerateCurrentDocument(doc);
   });
 
+  $("btnRegenerateCurrentTab", doc)?.addEventListener("click", async () => {
+    if (state.output !== "texte") {
+      state.output = "texte";
+      renderAllUI(doc);
+    }
+    await regenerateCurrentDocument(doc);
+  });
+
   $("btnCopy", doc)?.addEventListener("click", async () => {
     const output = $("output", doc);
     if (!output) return;
@@ -681,13 +610,6 @@ export function bindTopbarActions(doc = document) {
 
   $("btnPrint", doc)?.addEventListener("click", () => {
     window.print();
-  });
-
-  $("btnOpenRightDockTodo", doc)?.addEventListener("click", () => {
-    setRightCollapsed(false);
-    state.rightView = "todo";
-    renderPanelState(doc);
-    renderRightViews(doc);
   });
 }
 
@@ -705,17 +627,37 @@ export function bindFieldListeners(doc = document) {
 }
 
 /* =========================================================
-   DOCUMENT / MAIL HELPERS
+   WARNINGS
 ========================================================= */
 
-export function bindMailHelpers(doc = document) {
-  $("btnNewLetterTab", doc)?.addEventListener("click", () => {
-    createNewLetterDocument({ blank: true }, doc);
-  });
+export function renderWarnings(doc = document) {
+  const target = $("warnings", doc);
+  if (!target) return;
+
+  const warnings = [];
+
+  if (state.type === "administratif" && state.subType === "rapport mutuelle" && !cleanText($("mainReason", doc)?.value)) {
+    warnings.push("Rapport mutuelle sans motif / diagnostic principal.");
+  }
+
+  if (cleanText($("alcQty", doc)?.value) && !state.selected.alcType?.length) {
+    warnings.push("Quantité d’alcool renseignée sans type d’alcool sélectionné.");
+  }
+
+  if (state.type === "mail" && !cleanText($("letterSubject", doc)?.value)) {
+    warnings.push("Mail sans objet.");
+  }
+
+  if (!warnings.length) {
+    target.textContent = "Aucune alerte.";
+    return;
+  }
+
+  target.innerHTML = warnings.map(w => `<div class="warn">• ${w}</div>`).join("");
 }
 
 /* =========================================================
-   MAIN RENDER
+   RENDER GLOBAL
 ========================================================= */
 
 export function renderAllUI(doc = document) {
@@ -730,6 +672,7 @@ export function renderAllUI(doc = document) {
   renderAllDocumentTabs(doc);
   renderRecentDocuments(doc);
   renderHabitGrid(doc);
+  renderWarnings(doc);
 }
 
 /* =========================================================
@@ -740,16 +683,20 @@ export function initializeUIModule(doc = document) {
   if (uiInitialized) return;
   uiInitialized = true;
 
+  const loaded = loadStateFromStorage(doc);
+  if (!loaded) {
+    initializeState(doc);
+  }
+
   initializeDocumentsModule(doc);
 
   bindMenus(doc);
   bindRightViews(doc);
   bindWindowButtons(doc);
   bindPanelControls(doc);
-  bindPersistenceButtons(doc);
-  bindTopbarActions(doc);
+  bindPersistenceIfPresent(doc);
+  bindTopbarAndActions(doc);
   bindFieldListeners(doc);
-  bindMailHelpers(doc);
 
   renderAllUI(doc);
-      }
+}
