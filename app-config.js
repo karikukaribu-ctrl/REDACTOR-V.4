@@ -1,7 +1,12 @@
-// app-config.js
-// Source unique de vérité pour les options, presets et structures V7
+// app-config.js — V8
+// Configuration centrale alignée sur le HTML V8
 
-export const APP_STORAGE_KEY = "psychnote_v7_modular";
+export const APP_STORAGE_KEY = "psychnote_v8";
+
+export const DOCUMENT_KIND = {
+  MAIN: "main",
+  LETTER: "letter"
+};
 
 export const TYPE_OPTIONS = [
   "consultation",
@@ -63,95 +68,133 @@ export const OUTPUT_OPTIONS = ["texte", "questionnaire", "todo"];
 export const APPEARANCE_OPTIONS = {
   themeModeChoices: ["clair", "sombre"],
   seasonChoices: ["printemps", "été", "automne", "hiver"],
-  fontChoices: ["inter", "classic", "serif", "hand", "anime"],
+  fontChoices: ["classic", "inter", "serif", "hand", "anime"],
   transparencyChoices: ["low", "medium", "high"],
   shadowChoices: ["off", "soft", "on"]
 };
 
-export const RIGHT_VIEW_OPTIONS = ["todo", "history", "patients", "week"];
-export const WINDOW_NAMES = [
-  "mainEncodingWindow",
-  "examWindow",
-  "treatmentWindow",
-  "psychosocialWindow",
-  "antecedentsWindow",
-  "riskWindow",
-  "consumptionWindow",
-  "withdrawalWindow",
-  "mailResponseWindow",
-  "todoWindow",
-  "presetsWindow",
-  "appearanceWindow"
-];
-
-export const DOCUMENT_KIND = {
-  MAIN: "main",
-  LETTER: "letter"
+export const CONTEXTUAL_LEFT_PANEL = {
+  consultation: {
+    structures: [
+      "motif + contexte + examen + plan",
+      "intro + clinique + plan",
+      "consultation structurée"
+    ],
+    blocks: [
+      "motif / demande",
+      "contexte / histoire",
+      "examen clinique / mental",
+      "traitement",
+      "plan"
+    ],
+    phrases: [
+      "Je vois en consultation de psychiatrie…",
+      "Sur le plan clinique…",
+      "Le plan proposé est…"
+    ]
+  },
+  urgences: {
+    structures: [
+      "motif + examen + risque + décision",
+      "intro + clinique + orientation"
+    ],
+    blocks: [
+      "motif / demande",
+      "examen clinique / mental",
+      "risque suicidaire",
+      "décision / orientation"
+    ],
+    phrases: [
+      "Est vu aux urgences pour…",
+      "Le risque suicidaire est évalué comme…",
+      "La décision retenue est…"
+    ]
+  },
+  hospitalisation: {
+    structures: [
+      "admission complète sevrage",
+      "évolution + examen + traitement + projection",
+      "sortie structurée"
+    ],
+    blocks: [
+      "motif / demande",
+      "consommations",
+      "antécédents",
+      "examen clinique / mental",
+      "traitement",
+      "projection / suite"
+    ],
+    phrases: [
+      "Évolution générale…",
+      "Le travail d’élaboration porte sur…",
+      "La projection à la sortie est…"
+    ]
+  },
+  "préadmission": {
+    structures: [
+      "motif + consommation + examen + indication",
+      "préadmission structurée"
+    ],
+    blocks: [
+      "motif / demande",
+      "consommations",
+      "psychosocial",
+      "indication"
+    ],
+    phrases: [
+      "Évaluation de préadmission…",
+      "L’indication retenue est…"
+    ]
+  },
+  administratif: {
+    structures: [
+      "mutuelle structurée",
+      "attestation simple",
+      "certificat synthétique"
+    ],
+    blocks: [
+      "contexte / histoire",
+      "examen clinique / mental",
+      "psychosocial",
+      "retentissement fonctionnel",
+      "conclusion"
+    ],
+    phrases: [
+      "Au début de la prise en charge…",
+      "Actuellement, il persiste…",
+      "Je reste à disposition…"
+    ]
+  },
+  mail: {
+    structures: [
+      "mail bref structuré",
+      "objet + contexte + action"
+    ],
+    blocks: [
+      "motif / demande",
+      "conclusion"
+    ],
+    phrases: [
+      "Bonjour,",
+      "Je reviens vers vous concernant…",
+      "Bien à vous."
+    ]
+  }
 };
 
-export const MAIN_FREQUENT_MOTIVES = [
-  "anxiété",
-  "humeur dépressive",
-  "crise suicidaire",
-  "idéations suicidaires",
-  "insomnie",
-  "demande de sevrage alcool",
-  "consommations problématiques",
-  "attaque de panique",
-  "souffrance psychosociale",
-  "évaluation diagnostique",
-  "trouble du comportement",
-  "décompensation anxieuse",
-  "décompensation thymique",
-  "conflit familial",
-  "retentissement fonctionnel important"
-];
+/* =========================================================
+   OPTIONS DE TOKENS
+========================================================= */
 
-export const MAIN_FREQUENT_SYMPTOMS = [
-  "ruminations",
-  "anhédonie",
-  "fatigabilité",
-  "hypervigilance",
-  "troubles du sommeil",
-  "tension interne",
-  "irritabilité",
-  "aboulie",
-  "repli",
-  "hallucinations auditives rapportées",
-  "angoisse",
-  "sentiment d’épuisement",
-  "baisse de l’élan",
-  "culpabilité",
-  "difficultés de concentration"
-];
-
-export const MAIN_FREQUENT_PLANS = [
-  "poursuite du suivi psychiatrique",
-  "surveillance clinique",
-  "évaluation addictologique",
-  "travail psychoéducatif",
-  "coordination avec le réseau",
-  "contact familial si accord",
-  "adaptation thérapeutique",
-  "préparation de sortie",
-  "plan de crise",
-  "proposer hospitalisation",
-  "mise en sécurité",
-  "réévaluation rapide",
-  "soutien ambulatoire",
-  "orientation psychothérapie"
-];
-
-export const ALCOHOL_FUNCTION_QUICK = [
-  "anxiolytique",
-  "sommeil",
-  "socialisation",
-  "gestion émotion",
-  "solitude",
-  "ennui",
-  "habitude",
-  "impulsivité",
-  "couper les pensées"
+export const DOC_TEMPLATE_OPTIONS = [
+  "rapport mutuelle anxio-dépressif",
+  "rapport mutuelle dépression chronique",
+  "consultation suivi anxio-dépressif",
+  "urgences crise suicidaire",
+  "préadmission sevrage alcool",
+  "hospitalisation semaine 1",
+  "attestation de présence",
+  "mail réponse simple"
 ];
 
 export const SMART_PRESET_OPTIONS = [
@@ -161,40 +204,6 @@ export const SMART_PRESET_OPTIONS = [
   "sevrage alcool compliqué",
   "insomnie / anxiété",
   "trauma probable"
-];
-
-export const DOC_VERSION_OPTIONS = ["rapide", "complet", "élargi"];
-export const STRUCTURE_PRESET_OPTIONS = [
-  "intro + clinique + plan",
-  "motif + contexte + examen + plan",
-  "évolution + examen + traitement + projection",
-  "mutuelle structurée",
-  "mail bref structuré",
-  "admission complète sevrage"
-];
-
-export const WRITING_BLOCK_OPTIONS = [
-  "évolution générale",
-  "motif / demande",
-  "contexte / histoire",
-  "examen clinique / mental",
-  "consommations",
-  "psychosocial",
-  "antécédents",
-  "traitement",
-  "retentissement fonctionnel",
-  "projection / suite",
-  "conclusion"
-];
-
-export const WRITING_PHRASE_OPTIONS = [
-  "Je vois en consultation de psychiatrie…",
-  "Au début de la prise en charge…",
-  "Actuellement, il persiste…",
-  "Sur le plan clinique…",
-  "Le retentissement fonctionnel est marqué par…",
-  "La poursuite du traitement est encouragée…",
-  "Je reste à disposition pour de plus amples informations…"
 ];
 
 export const HOSPITAL_WEEK1_OPTIONS = [
@@ -310,6 +319,7 @@ export const TASK_TYPE_OPTIONS = [
 
 export const TASK_PRIORITY_OPTIONS = ["haute", "moyenne", "basse"];
 export const TASK_ENERGY_OPTIONS = ["très simple", "simple", "moyen", "lourd"];
+
 export const TODO_SET_OPTIONS = [
   "bloc rapports",
   "bloc mails et réponses",
@@ -737,19 +747,14 @@ export const TODO_VIEW_OPTIONS = [
   "par bloc"
 ];
 
-/**
- * Définition centrale des groupes de sélection.
- * - id = id HTML du conteneur
- * - key = clé dans state.selected
- * - single = vrai si choix unique
- * - direct = clé d’état directe si on ne veut pas passer par selected
- */
-export const TOKEN_GROUPS = [
-  { id: "docVersionChoices", key: "docVersion", single: true, options: DOC_VERSION_OPTIONS },
+/* =========================================================
+   GROUPES DE TOKENS
+========================================================= */
 
-  { id: "structurePresetChoices", key: "structurePreset", single: false, options: STRUCTURE_PRESET_OPTIONS },
-  { id: "writingBlockChoices", key: "writingBlock", single: false, options: WRITING_BLOCK_OPTIONS },
-  { id: "writingPhraseChoices", key: "writingPhrase", single: false, options: WRITING_PHRASE_OPTIONS },
+export const TOKEN_GROUPS = [
+  { id: "structurePresetChoices", key: "structurePreset", single: false, options: [] },
+  { id: "writingBlockChoices", key: "writingBlock", single: false, options: [] },
+  { id: "writingPhraseChoices", key: "writingPhrase", single: false, options: [] },
 
   { id: "hospitalWeek1Choices", key: "hospitalWeek1", single: false, options: HOSPITAL_WEEK1_OPTIONS },
   { id: "hospitalWeek2Choices", key: "hospitalWeek2", single: false, options: HOSPITAL_WEEK2_OPTIONS },
@@ -758,7 +763,6 @@ export const TOKEN_GROUPS = [
   { id: "administrativeQuickChoices", key: "administrativeQuick", single: false, options: ADMINISTRATIVE_QUICK_OPTIONS },
   { id: "letterQuickChoices", key: "letterQuick", single: false, options: LETTER_QUICK_OPTIONS },
   { id: "toneQuickChoices", key: "toneQuick", single: false, options: TONE_QUICK_OPTIONS },
-  { id: "smartPresetChoices", key: "smartPreset", single: false, options: SMART_PRESET_OPTIONS },
 
   { id: "planningVisualChoices", key: "planningVisual", single: true, options: PLANNING_VISUAL_OPTIONS },
   { id: "dayTemplateChoices", key: "dayTemplate", single: true, options: DAY_TEMPLATE_OPTIONS },
@@ -841,18 +845,18 @@ export const TOKEN_GROUPS = [
   { id: "todoViewChoices", key: "todoView", single: true, options: TODO_VIEW_OPTIONS }
 ];
 
-/**
- * HTML IDs de champs libres / inputs à sérialiser.
- * On garde ici tout ce qui sera relu par l’état et les générateurs.
- */
+/* =========================================================
+   CHAMPS À SÉRIALISER
+========================================================= */
+
 export const SERIALIZED_FIELD_IDS = [
   "docDate",
   "mainReason",
   "mainContext",
   "mainPlan",
 
-  "taskInbox",
   "taskDurationEstimate",
+  "taskInbox",
   "taskNotesFree",
   "dailyClosingGoal",
   "dailyReportGoal",
@@ -918,16 +922,18 @@ export const SERIALIZED_FIELD_IDS = [
   "mailMainContent"
 ];
 
-/**
- * Presets :
- * on applique ensuite ces patches dans le state et/ou dans les champs.
- */
+/* =========================================================
+   PRESETS
+========================================================= */
+
 export const PRESET_PATCHES = {
   "rapport mutuelle anxio-dépressif": {
     state: {
       type: "administratif",
       subType: "rapport mutuelle",
-      gender: "femme"
+      gender: "femme",
+      mode: "complet",
+      output: "texte"
     },
     selected: {
       mseMode: "long",
@@ -959,7 +965,9 @@ export const PRESET_PATCHES = {
   "rapport mutuelle dépression chronique": {
     state: {
       type: "administratif",
-      subType: "rapport mutuelle"
+      subType: "rapport mutuelle",
+      mode: "complet",
+      output: "texte"
     },
     selected: {
       mseMood: ["humeur triste", "humeur abaissée"],
@@ -976,7 +984,9 @@ export const PRESET_PATCHES = {
   "consultation suivi anxio-dépressif": {
     state: {
       type: "consultation",
-      subType: "suivi"
+      subType: "suivi",
+      mode: "complet",
+      output: "texte"
     },
     selected: {
       msePreset: "anxio-dépressif",
@@ -990,7 +1000,9 @@ export const PRESET_PATCHES = {
   "urgences crise suicidaire": {
     state: {
       type: "urgences",
-      subType: "évaluation urgences"
+      subType: "évaluation urgences",
+      mode: "complet",
+      output: "texte"
     },
     selected: {
       riskIdeas: "actives",
@@ -1005,7 +1017,9 @@ export const PRESET_PATCHES = {
   "préadmission sevrage alcool": {
     state: {
       type: "préadmission",
-      subType: "évaluation de préadmission"
+      subType: "évaluation de préadmission",
+      mode: "complet",
+      output: "texte"
     },
     selected: {
       alcType: ["mixte"],
@@ -1020,7 +1034,9 @@ export const PRESET_PATCHES = {
   "hospitalisation semaine 1": {
     state: {
       type: "hospitalisation",
-      subType: "admission semaine 1"
+      subType: "admission semaine 1",
+      mode: "complet",
+      output: "texte"
     },
     selected: {
       hospitalWeek1: ["motivation", "type de consommation", "histoire de la consommation", "fonction de la consommation", "ATCD psychiatriques", "ATCD de sevrage", "suivi en cours", "examen mental complet"],
@@ -1036,14 +1052,18 @@ export const PRESET_PATCHES = {
   "attestation de présence": {
     state: {
       type: "administratif",
-      subType: "attestation de présence"
+      subType: "attestation de présence",
+      mode: "rapide",
+      output: "texte"
     }
   },
 
   "mail réponse simple": {
     state: {
       type: "mail",
-      subType: "réponse simple"
+      subType: "réponse simple",
+      mode: "rapide",
+      output: "texte"
     },
     selected: {
       mailFrequentType: ["réponse courte"]
@@ -1096,10 +1116,10 @@ export const PRESET_PATCHES = {
   }
 };
 
-/**
- * État par défaut.
- * Les tableaux selected seront remplis automatiquement dans app-state.js
- */
+/* =========================================================
+   ÉTAT PAR DÉFAUT
+========================================================= */
+
 export const DEFAULT_STATE = {
   gender: "femme",
   civility: "auto",
@@ -1111,25 +1131,23 @@ export const DEFAULT_STATE = {
 
   theme: "clair",
   season: "printemps",
-  font: "inter",
-  transparency: "medium",
-  shadowMode: "on",
-
-  leftPanelWidth: 360,
-  rightPanelWidth: 360,
+  font: "classic",
+  transparency: "low",
+  shadowMode: "soft",
 
   leftCollapsed: false,
   rightCollapsed: false,
-
   rightView: "todo",
 
   selected: {},
+
   mainDocs: [],
   letterDocs: [],
   activeMainDocId: null,
   activeLetterDocId: null,
 
-  openedWindows: [],
+  activeWindowId: null,
+
   taskItems: [],
   recentDocuments: [],
   habitTrack: {},
@@ -1138,9 +1156,6 @@ export const DEFAULT_STATE = {
   withdrawalPlanText: ""
 };
 
-/**
- * Génère la structure vide de selected à partir de TOKEN_GROUPS
- */
 export function buildEmptySelectedState() {
   const selected = {};
   for (const group of TOKEN_GROUPS) {
@@ -1148,40 +1163,4 @@ export function buildEmptySelectedState() {
     selected[group.key] = group.single ? "" : [];
   }
   return selected;
-}
-
-/**
- * Petits helpers de contexte rédactionnel à utiliser côté UI
- */
-export const CONTEXTUAL_LEFT_PANEL = {
-  consultation: {
-    structures: ["motif + contexte + examen + plan", "intro + clinique + plan"],
-    blocks: ["motif / demande", "contexte / histoire", "examen clinique / mental", "traitement", "plan"],
-    phrases: ["Je vois en consultation de psychiatrie…", "Sur le plan clinique…", "Plan…"]
-  },
-  urgences: {
-    structures: ["motif + examen + risque + décision", "intro + clinique + orientation"],
-    blocks: ["motif / demande", "examen clinique / mental", "risque suicidaire", "conclusion"],
-    phrases: ["Est vu aux urgences pour…", "Risque suicidaire…", "Décision / orientation…"]
-  },
-  hospitalisation: {
-    structures: ["admission complète sevrage", "évolution + examen + traitement + projection"],
-    blocks: ["consommations", "antécédents", "examen clinique / mental", "traitement", "projection / suite"],
-    phrases: ["Évolution générale…", "Dynamique thérapeutique…", "Projection / suite…"]
-  },
-  "préadmission": {
-    structures: ["motif + consommation + examen + indication"],
-    blocks: ["motif / demande", "consommations", "psychosocial", "conclusion"],
-    phrases: ["Évaluation de préadmission…", "Indication…"]
-  },
-  administratif: {
-    structures: ["mutuelle structurée", "intro + clinique + conclusion"],
-    blocks: ["retentissement fonctionnel", "psychosocial", "traitement", "conclusion"],
-    phrases: ["Au début de la prise en charge…", "Actuellement, il persiste…", "Je reste à disposition…"]
-  },
-  mail: {
-    structures: ["mail bref structuré", "objet + contexte + action"],
-    blocks: ["motif / demande", "conclusion"],
-    phrases: ["Bonjour,…", "Je reviens vers vous concernant…", "Bien à vous."]
-  }
-};
+    }
